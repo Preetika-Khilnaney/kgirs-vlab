@@ -5,17 +5,13 @@ Subject: Knowledge Graph and Information Retrieval System (KGIRS)
 Experiment 6: Identify Graph Entities & Probabilistic Retrieval Performance
 
 Sections:
-  1. Aim
-  2. Introduction
-  3. Theory
-  4. Case Study
-  5. Pretest
-  6. Simulation
-  7. Procedure
-  8. Exercises
-  9. Posttest
-  10. References
-  11. Report Generation
+  1. Purpose
+  2. Theory
+  3. Simulation
+  4. Quiz
+  5. Report Generation
+  6. Certificate
+  7. References
 
 Designed following IIT Kharagpur Virtual Lab format and the modular architecture of template.py.
 """
@@ -23,6 +19,7 @@ Designed following IIT Kharagpur Virtual Lab format and the modular architecture
 import os
 import math
 import re
+import random
 from datetime import datetime
 from collections import Counter
 
@@ -30,6 +27,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 from fpdf import FPDF
 import networkx as nx
 
@@ -53,75 +51,12 @@ EXPERIMENT_CONFIG = {
     ]
 }
 
-# Pretest Questions (Diagnostic)
-PRETEST_QUESTIONS = [
+# Quiz Question Bank: the Quiz section randomly samples 10 of these each time,
+# so pressing "Get New Question Set" produces a fresh mix of questions.
+QUIZ_QUESTION_BANK = [
     {
         "id": 1,
-        "question": "Which of the following best defines a Named Entity in knowledge graph construction?",
-        "options": [
-            "A) Any arbitrary stopword or punctuation mark in a sentence",
-            "B) A real-world object or abstract concept with distinct identity and semantic type (e.g., Person, Org, Loc)",
-            "C) A mathematical syntax error occurring during text tokenization",
-            "D) A random float value assigned to word frequency counters"
-        ],
-        "answer_index": 1,
-        "explanation": "A Named Entity represents a discrete real-world entity (such as an individual, company, place, or concept) that can be linked to a node in a Knowledge Graph."
-    },
-    {
-        "id": 2,
-        "question": "What is the primary limitation of pure keyword-based Bag-of-Words (BoW) retrieval?",
-        "options": [
-            "A) It cannot store strings in computer memory",
-            "B) It ignores word polysemy, synonymy, semantic entity types, and relational context",
-            "C) It executes too quickly to calculate relevance scores",
-            "D) It only processes numerical equations rather than natural language"
-        ],
-        "answer_index": 1,
-        "explanation": "Bag-of-Words models treat text as unorganized tokens, failing to recognize that terms like 'Apple' could mean a fruit or an organization, and missing underlying entity relationships."
-    },
-    {
-        "id": 3,
-        "question": "According to the Probability Ranking Principle (PRP) formulated by Robertson (1977), how should documents be ordered?",
-        "options": [
-            "A) In random order to ensure statistical variance",
-            "B) In decreasing order of their estimated probability of relevance to the information need",
-            "C) Alphabetically by document author name",
-            "D) Strictly by increasing order of document length in bytes"
-        ],
-        "answer_index": 1,
-        "explanation": "The Probability Ranking Principle asserts that overall retrieval effectiveness is maximized when documents are returned in decreasing order of their estimated probability of relevance."
-    },
-    {
-        "id": 4,
-        "question": "In a Knowledge Graph, how is factual information structured at the foundational level?",
-        "options": [
-            "A) As unstructured binary blobs",
-            "B) As relational subject-predicate-object (head, relation, tail) triples",
-            "C) As isolated single float values",
-            "D) As recursive HTML document trees without attributes"
-        ],
-        "answer_index": 1,
-        "explanation": "Knowledge Graphs represent domain facts using directed relational triples (head entity, relation predicate, tail entity), e.g., (Geoffrey Hinton, affiliated_with, Google)."
-    },
-    {
-        "id": 5,
-        "question": "In the Okapi BM25 retrieval model, what purpose does the Inverse Document Frequency (IDF) factor serve?",
-        "options": [
-            "A) It penalizes rare, highly informative terms",
-            "B) It assigns higher discriminative weight to terms that appear in fewer documents across the collection",
-            "C) It sets all term frequencies to a constant value of 1.0",
-            "D) It deletes documents whose length exceeds the average"
-        ],
-        "answer_index": 1,
-        "explanation": "IDF penalizes widespread common words (like 'the', 'system') while giving high discriminative weight to rare, salient terms and specific entities."
-    }
-]
-
-# Posttest Questions (Comprehensive Evaluation matching template style)
-POSTTEST_QUESTIONS = [
-    {
-        "id": 1,
-        "question": "Which of the following entity categories correctly classifies 'DeepMind' and 'OpenAI'?",
+        "question": "Which of the following entity categories correctly classifies 'Cortex Labs' and 'Arclight AI'?",
         "options": [
             "A) LOCATION (LOC)",
             "B) ORGANIZATION (ORG)",
@@ -129,7 +64,7 @@ POSTTEST_QUESTIONS = [
             "D) TEMPORAL (DATE)"
         ],
         "answer_index": 1,
-        "explanation": "'DeepMind' and 'OpenAI' are research labs and corporate entities, classified under the ORGANIZATION (ORG) category."
+        "explanation": "'Cortex Labs' and 'Arclight AI' are research labs and corporate entities, classified under the ORGANIZATION (ORG) category."
     },
     {
         "id": 2,
@@ -137,7 +72,7 @@ POSTTEST_QUESTIONS = [
         "options": [
             "A) It controls the term frequency saturation non-linearity (how fast score plateaus with repeated term occurrences)",
             "B) It sets the absolute document length in bytes",
-            "C) It determines the database port for Neo4j connections",
+            "C) It determines the network port used for graph database connections",
             "D) It eliminates all stop words from the query vector"
         ],
         "answer_index": 0,
@@ -195,7 +130,7 @@ POSTTEST_QUESTIONS = [
         "id": 7,
         "question": "In graph entity extraction, what problem does Entity Disambiguation (Entity Linking) resolve?",
         "options": [
-            "A) Determining whether an entity mention like 'Paris' refers to Paris, France or Paris Hilton",
+            "A) Determining whether an entity mention like 'Paris' refers to the city of Paris or a person named Paris",
             "B) Formatting JSON files into comma-separated text files",
             "C) Deleting stop words from the query string",
             "D) Preventing network graph edges from crossing each other"
@@ -238,6 +173,126 @@ POSTTEST_QUESTIONS = [
         ],
         "answer_index": 0,
         "explanation": "Targeted graphs with 8-15 nodes maintain visual clarity, allowing learners to clearly trace entity types, relationships, and degree centrality without confusing cluttered layouts."
+    },
+    {
+        "id": 11,
+        "question": "Which of the following best defines a Named Entity in knowledge graph construction?",
+        "options": [
+            "A) Any arbitrary stopword or punctuation mark in a sentence",
+            "B) A real-world object or abstract concept with distinct identity and semantic type (e.g., Person, Org, Loc)",
+            "C) A mathematical syntax error occurring during text tokenization",
+            "D) A random float value assigned to word frequency counters"
+        ],
+        "answer_index": 1,
+        "explanation": "A Named Entity represents a discrete real-world entity (such as an individual, company, place, or concept) that can be linked to a node in a Knowledge Graph."
+    },
+    {
+        "id": 12,
+        "question": "What is the primary limitation of pure keyword-based Bag-of-Words (BoW) retrieval?",
+        "options": [
+            "A) It cannot store strings in computer memory",
+            "B) It ignores word polysemy, synonymy, semantic entity types, and relational context",
+            "C) It executes too quickly to calculate relevance scores",
+            "D) It only processes numerical equations rather than natural language"
+        ],
+        "answer_index": 1,
+        "explanation": "Bag-of-Words models treat text as unorganized tokens, failing to recognize that a term like 'Mercury' could mean a planet or an organization, and missing underlying entity relationships."
+    },
+    {
+        "id": 13,
+        "question": "According to the Probability Ranking Principle (PRP) formulated by Robertson (1977), how should documents be ordered?",
+        "options": [
+            "A) In random order to ensure statistical variance",
+            "B) In decreasing order of their estimated probability of relevance to the information need",
+            "C) Alphabetically by document author name",
+            "D) Strictly by increasing order of document length in bytes"
+        ],
+        "answer_index": 1,
+        "explanation": "The Probability Ranking Principle asserts that overall retrieval effectiveness is maximized when documents are returned in decreasing order of their estimated probability of relevance."
+    },
+    {
+        "id": 14,
+        "question": "In a Knowledge Graph, how is factual information structured at the foundational level?",
+        "options": [
+            "A) As unstructured binary blobs",
+            "B) As relational subject-predicate-object (head, relation, tail) triples",
+            "C) As isolated single float values",
+            "D) As recursive HTML document trees without attributes"
+        ],
+        "answer_index": 1,
+        "explanation": "Knowledge Graphs represent domain facts using directed relational triples (head entity, relation predicate, tail entity), e.g., (Elena Voss, affiliated_with, Nimbus Labs)."
+    },
+    {
+        "id": 15,
+        "question": "In the Okapi BM25 retrieval model, what purpose does the Inverse Document Frequency (IDF) factor serve?",
+        "options": [
+            "A) It penalizes rare, highly informative terms",
+            "B) It assigns higher discriminative weight to terms that appear in fewer documents across the collection",
+            "C) It sets all term frequencies to a constant value of 1.0",
+            "D) It deletes documents whose length exceeds the average"
+        ],
+        "answer_index": 1,
+        "explanation": "IDF penalizes widespread common words (like 'the', 'system') while giving high discriminative weight to rare, salient terms and specific entities."
+    },
+    {
+        "id": 16,
+        "question": "In the Vector Space Model vs. the Probabilistic Model of Information Retrieval, what distinguishes the probabilistic approach?",
+        "options": [
+            "A) It represents documents as points in Euclidean space ranked by cosine similarity",
+            "B) It estimates and ranks documents by their probability of relevance to the query, grounded in relevance theory",
+            "C) It requires no term weighting scheme at all",
+            "D) It only works for numeric datasets, not natural language text"
+        ],
+        "answer_index": 1,
+        "explanation": "Unlike the geometric Vector Space Model, the Probabilistic Model explicitly estimates P(relevance | document, query) and ranks accordingly, per the Probability Ranking Principle."
+    },
+    {
+        "id": 17,
+        "question": "What does Recall@K measure in a retrieval evaluation?",
+        "options": [
+            "A) The fraction of the top K retrieved documents that are relevant",
+            "B) The fraction of all relevant documents in the collection that were successfully retrieved within the top K",
+            "C) The average time taken to retrieve K documents",
+            "D) The number of irrelevant documents mistakenly excluded from the corpus"
+        ],
+        "answer_index": 1,
+        "explanation": "Recall@K = (Relevant documents retrieved in top K) / (Total relevant documents in the collection), measuring retrieval completeness rather than precision."
+    },
+    {
+        "id": 18,
+        "question": "What is the maximum possible value of NDCG@K, and what does achieving it indicate?",
+        "options": [
+            "A) NDCG@K can exceed 1.0 when all documents are relevant",
+            "B) NDCG@K = 1.0, indicating the ranking matches the ideal order of relevance",
+            "C) NDCG@K is unbounded and has no maximum",
+            "D) NDCG@K = K, one point per correctly ranked document"
+        ],
+        "answer_index": 1,
+        "explanation": "NDCG@K is normalized against the Ideal DCG@K, so a perfect ranking (most relevant documents placed highest) always yields NDCG@K = 1.0."
+    },
+    {
+        "id": 19,
+        "question": "As the Entity Boost Factor (alpha) is increased significantly in the entity-aware scoring formula, what effect does this have on ranking?",
+        "options": [
+            "A) It has no effect since alpha only scales document length",
+            "B) Entity/relational matches increasingly dominate the final score, potentially overriding lexical BM25 differences",
+            "C) It reduces the influence of all query terms to zero immediately",
+            "D) It converts the ranking algorithm into a purely alphabetical sort"
+        ],
+        "answer_index": 1,
+        "explanation": "Since the final score is BM25 + alpha * entity_salience, increasing alpha proportionally increases the weight of verified entity/relation matches relative to the lexical BM25 component."
+    },
+    {
+        "id": 20,
+        "question": "Why does combining structured Knowledge Graph triples with lexical BM25 scoring create a 'hybrid search' system?",
+        "options": [
+            "A) Because it merges two unrelated database engines into a single binary file",
+            "B) Because it combines unstructured lexical term-matching signals with structured, verified relational entity signals in one ranking score",
+            "C) Because it retrieves documents from two separate physical servers simultaneously",
+            "D) Because it hybridizes image search with text search"
+        ],
+        "answer_index": 1,
+        "explanation": "Hybrid search fuses lexical evidence (term frequency/IDF) with structured semantic evidence (verified entities and relations), addressing weaknesses that either signal alone would miss."
     }
 ]
 
@@ -248,178 +303,178 @@ POSTTEST_QUESTIONS = [
 
 DATA_CORPORA = {
     "AI & Deep Learning Pioneers (Domain 1)": {
-        "description": "Corpus on Artificial Intelligence pioneers, foundational research institutions, breakthrough algorithms, and global research hubs.",
+        "description": "Corpus on fictional Artificial Intelligence researchers, invented research institutions, breakthrough algorithms, and global research hubs.",
         "documents": [
             {
                 "doc_id": "DOC-101",
-                "title": "Deep Learning Breakthroughs at University of Toronto",
-                "text": "Geoffrey Hinton and his research group at University of Toronto pioneered Deep Learning and artificial neural network backpropagation. Hinton later joined Google Brain to scale distributed neural representations in Toronto.",
+                "title": "Deep Learning Breakthroughs at Lakeside University",
+                "text": "Elena Voss and her research group at Lakeside University pioneered Deep Learning and artificial neural network backpropagation. Voss later joined Nimbus AI Labs to scale distributed neural representations in Toronto.",
                 "entities": [
-                    {"name": "Geoffrey Hinton", "type": "PERSON"},
-                    {"name": "University of Toronto", "type": "ORGANIZATION"},
+                    {"name": "Elena Voss", "type": "PERSON"},
+                    {"name": "Lakeside University", "type": "ORGANIZATION"},
                     {"name": "Deep Learning", "type": "CONCEPT"},
-                    {"name": "Google Brain", "type": "ORGANIZATION"},
+                    {"name": "Nimbus AI Labs", "type": "ORGANIZATION"},
                     {"name": "Toronto", "type": "LOCATION"}
                 ],
                 "triples": [
-                    ("Geoffrey Hinton", "affiliated_with", "University of Toronto"),
-                    ("Geoffrey Hinton", "pioneered", "Deep Learning"),
-                    ("Geoffrey Hinton", "joined", "Google Brain"),
-                    ("University of Toronto", "located_in", "Toronto")
+                    ("Elena Voss", "affiliated_with", "Lakeside University"),
+                    ("Elena Voss", "pioneered", "Deep Learning"),
+                    ("Elena Voss", "joined", "Nimbus AI Labs"),
+                    ("Lakeside University", "located_in", "Toronto")
                 ],
-                "relevant_to": ["deep learning", "geoffrey hinton", "toronto neural network", "google brain pioneer"]
+                "relevant_to": ["deep learning", "elena voss", "toronto neural network", "nimbus ai labs pioneer"]
             },
             {
                 "doc_id": "DOC-102",
-                "title": "Convolutional Neural Networks and Meta AI Research",
-                "text": "Yann LeCun developed Convolutional Neural Networks for computer vision at New York University. LeCun subsequently became Chief AI Scientist at Meta AI in New York, collaborating on self-supervised machine learning.",
+                "title": "Convolutional Neural Networks and Horizon AI Research",
+                "text": "Marcus Lindqvist developed Convolutional Neural Networks for computer vision at Hudson University. Lindqvist subsequently became Chief AI Scientist at Horizon AI in New York, collaborating on self-supervised machine learning.",
                 "entities": [
-                    {"name": "Yann LeCun", "type": "PERSON"},
+                    {"name": "Marcus Lindqvist", "type": "PERSON"},
                     {"name": "Convolutional Networks", "type": "CONCEPT"},
-                    {"name": "New York University", "type": "ORGANIZATION"},
-                    {"name": "Meta AI", "type": "ORGANIZATION"},
+                    {"name": "Hudson University", "type": "ORGANIZATION"},
+                    {"name": "Horizon AI", "type": "ORGANIZATION"},
                     {"name": "New York", "type": "LOCATION"}
                 ],
                 "triples": [
-                    ("Yann LeCun", "affiliated_with", "New York University"),
-                    ("Yann LeCun", "developed", "Convolutional Networks"),
-                    ("Yann LeCun", "leads", "Meta AI"),
-                    ("Meta AI", "located_in", "New York")
+                    ("Marcus Lindqvist", "affiliated_with", "Hudson University"),
+                    ("Marcus Lindqvist", "developed", "Convolutional Networks"),
+                    ("Marcus Lindqvist", "leads", "Horizon AI"),
+                    ("Horizon AI", "located_in", "New York")
                 ],
-                "relevant_to": ["yann lecun", "convolutional networks", "meta ai research", "computer vision new york"]
+                "relevant_to": ["marcus lindqvist", "convolutional networks", "horizon ai research", "computer vision new york"]
             },
             {
                 "doc_id": "DOC-103",
-                "title": "DeepMind and Reinforcement Learning in London",
-                "text": "Demis Hassabis co-founded DeepMind in London, revolutionizing Deep Reinforcement Learning with AlphaGo and AlphaFold. DeepMind was acquired by Google, strengthening the London artificial intelligence ecosystem.",
+                "title": "Cortex Labs and Reinforcement Learning in London",
+                "text": "Kavi Rajan co-founded Cortex Labs in London, revolutionizing Deep Reinforcement Learning with StrategoNet and ProteoMind. Cortex Labs was acquired by Nimbus Corp, strengthening the London artificial intelligence ecosystem.",
                 "entities": [
-                    {"name": "Demis Hassabis", "type": "PERSON"},
-                    {"name": "DeepMind", "type": "ORGANIZATION"},
+                    {"name": "Kavi Rajan", "type": "PERSON"},
+                    {"name": "Cortex Labs", "type": "ORGANIZATION"},
                     {"name": "Reinforcement Learning", "type": "CONCEPT"},
-                    {"name": "Google", "type": "ORGANIZATION"},
+                    {"name": "Nimbus Corp", "type": "ORGANIZATION"},
                     {"name": "London", "type": "LOCATION"}
                 ],
                 "triples": [
-                    ("Demis Hassabis", "founded", "DeepMind"),
-                    ("Demis Hassabis", "pioneered", "Reinforcement Learning"),
-                    ("DeepMind", "acquired_by", "Google"),
-                    ("DeepMind", "located_in", "London")
+                    ("Kavi Rajan", "founded", "Cortex Labs"),
+                    ("Kavi Rajan", "pioneered", "Reinforcement Learning"),
+                    ("Cortex Labs", "acquired_by", "Nimbus Corp"),
+                    ("Cortex Labs", "located_in", "London")
                 ],
-                "relevant_to": ["deepmind", "demis hassabis", "reinforcement learning", "london ai google", "alphago"]
+                "relevant_to": ["cortex labs", "kavi rajan", "reinforcement learning", "london ai nimbus corp", "strategonet"]
             },
             {
                 "doc_id": "DOC-104",
-                "title": "Generative Pre-trained Transformers at OpenAI",
-                "text": "Sam Altman leads OpenAI in San Francisco, which introduced Generative Transformers and large language models. OpenAI partnered with Microsoft to deploy generative intelligence across enterprise cloud architectures.",
+                "title": "Generative Pre-trained Transformers at Arclight AI",
+                "text": "Ethan Cole leads Arclight AI in San Francisco, which introduced Generative Transformers and large language models. Arclight AI partnered with Meridian Systems to deploy generative intelligence across enterprise cloud architectures.",
                 "entities": [
-                    {"name": "Sam Altman", "type": "PERSON"},
-                    {"name": "OpenAI", "type": "ORGANIZATION"},
+                    {"name": "Ethan Cole", "type": "PERSON"},
+                    {"name": "Arclight AI", "type": "ORGANIZATION"},
                     {"name": "Generative Transformers", "type": "CONCEPT"},
-                    {"name": "Microsoft", "type": "ORGANIZATION"},
+                    {"name": "Meridian Systems", "type": "ORGANIZATION"},
                     {"name": "San Francisco", "type": "LOCATION"}
                 ],
                 "triples": [
-                    ("Sam Altman", "leads", "OpenAI"),
-                    ("OpenAI", "developed", "Generative Transformers"),
-                    ("OpenAI", "partnered_with", "Microsoft"),
-                    ("OpenAI", "located_in", "San Francisco")
+                    ("Ethan Cole", "leads", "Arclight AI"),
+                    ("Arclight AI", "developed", "Generative Transformers"),
+                    ("Arclight AI", "partnered_with", "Meridian Systems"),
+                    ("Arclight AI", "located_in", "San Francisco")
                 ],
-                "relevant_to": ["sam altman", "openai", "generative transformers", "san francisco cloud microsoft"]
+                "relevant_to": ["ethan cole", "arclight ai", "generative transformers", "san francisco cloud meridian systems"]
             },
             {
                 "doc_id": "DOC-105",
-                "title": "Montreal Institute for Learning Algorithms and Yoshua Bengio",
-                "text": "Yoshua Bengio founded Mila in Montreal to advance Deep Learning and generative adversarial modeling. Bengio collaborates with University of Montreal to promote ethical artificial intelligence frameworks.",
+                "title": "Aurora Institute for Learning Algorithms and Renata Okafor",
+                "text": "Renata Okafor founded the Aurora Institute in Montreal to advance Deep Learning and generative adversarial modeling. Okafor collaborates with Riverside University to promote ethical artificial intelligence frameworks.",
                 "entities": [
-                    {"name": "Yoshua Bengio", "type": "PERSON"},
-                    {"name": "Mila", "type": "ORGANIZATION"},
+                    {"name": "Renata Okafor", "type": "PERSON"},
+                    {"name": "Aurora Institute", "type": "ORGANIZATION"},
                     {"name": "Deep Learning", "type": "CONCEPT"},
                     {"name": "Montreal", "type": "LOCATION"}
                 ],
                 "triples": [
-                    ("Yoshua Bengio", "founded", "Mila"),
-                    ("Yoshua Bengio", "researches", "Deep Learning"),
-                    ("Mila", "located_in", "Montreal")
+                    ("Renata Okafor", "founded", "Aurora Institute"),
+                    ("Renata Okafor", "researches", "Deep Learning"),
+                    ("Aurora Institute", "located_in", "Montreal")
                 ],
-                "relevant_to": ["yoshua bengio", "deep learning", "montreal mila", "neural models"]
+                "relevant_to": ["renata okafor", "deep learning", "montreal aurora institute", "neural models"]
             }
         ]
     },
     "Enterprise Cloud & Systems (Domain 2)": {
-        "description": "Corpus on enterprise operating platforms, distributed cloud infrastructure, leadership, and headquarters.",
+        "description": "Corpus on fictional enterprise operating platforms, distributed cloud infrastructure, leadership, and headquarters.",
         "documents": [
             {
                 "doc_id": "DOC-201",
-                "title": "Microsoft Azure Cloud Platform Transformation",
-                "text": "Satya Nadella directs Microsoft from Redmond, steering the growth of the Azure Cloud ecosystem. Microsoft integrates Distributed Computing to support scalable hybrid enterprise infrastructures.",
+                "title": "Meridian Systems Cloud Platform Transformation",
+                "text": "Priya Anand directs Meridian Systems from Redmond, steering the growth of the Meridian Cloud ecosystem. Meridian Systems integrates Distributed Computing to support scalable hybrid enterprise infrastructures.",
                 "entities": [
-                    {"name": "Satya Nadella", "type": "PERSON"},
-                    {"name": "Microsoft", "type": "ORGANIZATION"},
-                    {"name": "Azure Cloud", "type": "CONCEPT"},
+                    {"name": "Priya Anand", "type": "PERSON"},
+                    {"name": "Meridian Systems", "type": "ORGANIZATION"},
+                    {"name": "Meridian Cloud", "type": "CONCEPT"},
                     {"name": "Redmond", "type": "LOCATION"},
                     {"name": "Distributed Computing", "type": "CONCEPT"}
                 ],
                 "triples": [
-                    ("Satya Nadella", "leads", "Microsoft"),
-                    ("Microsoft", "developed", "Azure Cloud"),
-                    ("Microsoft", "located_in", "Redmond"),
-                    ("Azure Cloud", "implements", "Distributed Computing")
+                    ("Priya Anand", "leads", "Meridian Systems"),
+                    ("Meridian Systems", "developed", "Meridian Cloud"),
+                    ("Meridian Systems", "located_in", "Redmond"),
+                    ("Meridian Cloud", "implements", "Distributed Computing")
                 ],
-                "relevant_to": ["satya nadella", "microsoft azure", "redmond cloud", "distributed computing"]
+                "relevant_to": ["priya anand", "meridian systems cloud", "redmond cloud", "distributed computing"]
             },
             {
                 "doc_id": "DOC-202",
-                "title": "Amazon Web Services and Global Cloud Scale",
-                "text": "Andy Jassy established Amazon Web Services in Seattle, deploying Elastic Cloud architecture worldwide. AWS delivers Cloud Virtualization for millions of enterprise software applications.",
+                "title": "Vantage Cloud Services and Global Cloud Scale",
+                "text": "Derek Simmons established Vantage Cloud Services in Seattle, deploying Elastic Cloud architecture worldwide. Vantage Cloud Services delivers Cloud Virtualization for millions of enterprise software applications.",
                 "entities": [
-                    {"name": "Andy Jassy", "type": "PERSON"},
-                    {"name": "Amazon", "type": "ORGANIZATION"},
+                    {"name": "Derek Simmons", "type": "PERSON"},
+                    {"name": "Vantage Cloud Services", "type": "ORGANIZATION"},
                     {"name": "Cloud Virtualization", "type": "CONCEPT"},
                     {"name": "Seattle", "type": "LOCATION"}
                 ],
                 "triples": [
-                    ("Andy Jassy", "leads", "Amazon"),
-                    ("Amazon", "engineered", "Cloud Virtualization"),
-                    ("Amazon", "located_in", "Seattle")
+                    ("Derek Simmons", "leads", "Vantage Cloud Services"),
+                    ("Vantage Cloud Services", "engineered", "Cloud Virtualization"),
+                    ("Vantage Cloud Services", "located_in", "Seattle")
                 ],
-                "relevant_to": ["andy jassy", "amazon web services", "seattle cloud virtualization"]
+                "relevant_to": ["derek simmons", "vantage cloud services", "seattle cloud virtualization"]
             },
             {
                 "doc_id": "DOC-203",
-                "title": "Google Cloud Platform and Distributed Data Processing",
-                "text": "Sundar Pichai leads Alphabet and Google in Mountain View, advancing Google Cloud and Kubernetes container orchestration. Google builds Distributed Computing systems for global web infrastructure.",
+                "title": "Nimbus Cloud Platform and Distributed Data Processing",
+                "text": "Arjun Mehta leads Nimbus Corp in Mountain View, advancing Nimbus Cloud and container orchestration technology. Nimbus Corp builds Distributed Computing systems for global web infrastructure.",
                 "entities": [
-                    {"name": "Sundar Pichai", "type": "PERSON"},
-                    {"name": "Google", "type": "ORGANIZATION"},
-                    {"name": "Google Cloud", "type": "CONCEPT"},
+                    {"name": "Arjun Mehta", "type": "PERSON"},
+                    {"name": "Nimbus Corp", "type": "ORGANIZATION"},
+                    {"name": "Nimbus Cloud", "type": "CONCEPT"},
                     {"name": "Mountain View", "type": "LOCATION"},
                     {"name": "Distributed Computing", "type": "CONCEPT"}
                 ],
                 "triples": [
-                    ("Sundar Pichai", "leads", "Google"),
-                    ("Google", "operates", "Google Cloud"),
-                    ("Google", "located_in", "Mountain View"),
-                    ("Google Cloud", "utilizes", "Distributed Computing")
+                    ("Arjun Mehta", "leads", "Nimbus Corp"),
+                    ("Nimbus Corp", "operates", "Nimbus Cloud"),
+                    ("Nimbus Corp", "located_in", "Mountain View"),
+                    ("Nimbus Cloud", "utilizes", "Distributed Computing")
                 ],
-                "relevant_to": ["sundar pichai", "google cloud", "mountain view", "distributed computing"]
+                "relevant_to": ["arjun mehta", "nimbus cloud", "mountain view", "distributed computing"]
             },
             {
                 "doc_id": "DOC-204",
-                "title": "Linux Foundation and Open Source Operating Kernels",
-                "text": "Linus Torvalds created the Linux Kernel, supported by the Linux Foundation in San Francisco. Linux powers modern Cloud Virtualization across major corporate data centers.",
+                "title": "Open Kernel Alliance and Open Source Operating Kernels",
+                "text": "Viktor Petrov created the Solstice Kernel, supported by the Open Kernel Alliance in San Francisco. The Solstice Kernel powers modern Cloud Virtualization across major corporate data centers.",
                 "entities": [
-                    {"name": "Linus Torvalds", "type": "PERSON"},
-                    {"name": "Linux Foundation", "type": "ORGANIZATION"},
-                    {"name": "Linux Kernel", "type": "CONCEPT"},
+                    {"name": "Viktor Petrov", "type": "PERSON"},
+                    {"name": "Open Kernel Alliance", "type": "ORGANIZATION"},
+                    {"name": "Solstice Kernel", "type": "CONCEPT"},
                     {"name": "San Francisco", "type": "LOCATION"},
                     {"name": "Cloud Virtualization", "type": "CONCEPT"}
                 ],
                 "triples": [
-                    ("Linus Torvalds", "created", "Linux Kernel"),
-                    ("Linux Foundation", "located_in", "San Francisco"),
-                    ("Linux Kernel", "enables", "Cloud Virtualization")
+                    ("Viktor Petrov", "created", "Solstice Kernel"),
+                    ("Open Kernel Alliance", "located_in", "San Francisco"),
+                    ("Solstice Kernel", "enables", "Cloud Virtualization")
                 ],
-                "relevant_to": ["linus torvalds", "linux kernel", "san francisco", "cloud virtualization"]
+                "relevant_to": ["viktor petrov", "solstice kernel", "san francisco", "cloud virtualization"]
             }
         ]
     }
@@ -613,9 +668,8 @@ def evaluate_comparative_retrieval(corpus_docs: list, query_str: str,
         if is_rel:
             ground_truth.add(d["doc_id"])
 
-    # If ground truth is empty, designate the doc with highest keyword overlap
-    if not ground_truth:
-        ground_truth.add(corpus_docs[0]["doc_id"])
+    # If ground truth is empty, no documents are genuinely relevant to this query
+    # (Previously this fallback forced the first doc as relevant, causing misleading labels)
 
     # 1. Standard BM25 Scoring
     bm25_results = []
@@ -823,8 +877,7 @@ class LabReportPDF(FPDF):
 
 
 def generate_pdf_report(student_name: str, student_id: str, date_str: str,
-                        trials_df: pd.DataFrame, pretest_score: int, pretest_total: int,
-                        posttest_score: int, posttest_total: int,
+                        trials_df: pd.DataFrame, quiz_score: int, quiz_total: int,
                         student_notes: str) -> bytes:
     """Compiles experiment benchmark records into an official PDF report document."""
     pdf = LabReportPDF()
@@ -878,7 +931,7 @@ def generate_pdf_report(student_name: str, student_id: str, date_str: str,
     pdf.cell(38, 5, "Evaluation Scores:", 0)
     pdf.set_font("Helvetica", "B", 9)
     pdf.set_text_color(16, 185, 129)
-    score_str = f"Pre: {pretest_score}/{pretest_total} | Post: {posttest_score}/{posttest_total}"
+    score_str = f"Quiz: {quiz_score}/{quiz_total}"
     pdf.cell(48, 5, score_str, 1)
 
     pdf.ln(16)
@@ -956,71 +1009,465 @@ def generate_pdf_report(student_name: str, student_id: str, date_str: str,
     return bytes(pdf.output())
 
 
+def generate_certificate_pdf(student_name: str, student_id: str, date_str: str,
+                             quiz_score: int, quiz_total: int) -> bytes:
+    """Compiles a landscape Certificate of Completion PDF for the experiment."""
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=False)
+
+    # Decorative double border
+    pdf.set_draw_color(37, 99, 235)
+    pdf.set_line_width(1.2)
+    pdf.rect(8, 8, 281, 194)
+    pdf.set_draw_color(148, 163, 184)
+    pdf.set_line_width(0.4)
+    pdf.rect(12, 12, 273, 186)
+
+    pdf.set_y(26)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.set_text_color(100, 116, 139)
+    pdf.cell(0, 6, "INDIAN INSTITUTE OF TECHNOLOGY KHARAGPUR - VIRTUAL LABORATORIES", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, "DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING | KGIRS", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(10)
+    pdf.set_font("Helvetica", "B", 28)
+    pdf.set_text_color(30, 58, 138)
+    pdf.cell(0, 14, "CERTIFICATE OF COMPLETION", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(8)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.set_text_color(71, 85, 105)
+    pdf.cell(0, 8, "This certifies that", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "BI", 24)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 12, student_name or "Student Name", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.set_text_color(71, 85, 105)
+    pdf.cell(0, 6, f"(Roll / ID: {student_id or 'N/A'})", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(8)
+    pdf.set_font("Helvetica", "", 12)
+    pdf.set_text_color(51, 65, 85)
+    body = (
+        f"has successfully completed Experiment {EXPERIMENT_CONFIG['exp_number']}: "
+        f"{EXPERIMENT_CONFIG['title']}, under the {EXPERIMENT_CONFIG['subject']} "
+        "curriculum of the IIT Kharagpur Virtual Laboratory."
+    )
+    pdf.set_x(30)
+    pdf.multi_cell(237, 7, body, align="C")
+
+    pdf.ln(6)
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.set_text_color(16, 185, 129)
+    pdf.cell(0, 8, f"Quiz Score Achieved: {quiz_score} / {quiz_total}", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(51, 65, 85)
+    pdf.set_xy(40, 168)
+    pdf.cell(70, 6, date_str or datetime.now().strftime("%Y-%m-%d"), align="C")
+    pdf.set_draw_color(148, 163, 184)
+    pdf.line(40, 175, 110, 175)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(100, 100, 100)
+    pdf.set_xy(40, 176)
+    pdf.cell(70, 5, "Date", align="C")
+
+    pdf.line(187, 175, 257, 175)
+    pdf.set_xy(187, 176)
+    pdf.cell(70, 5, "Instructor / Lab Coordinator Signature", align="C")
+
+    return bytes(pdf.output())
+
+
 # ======================================================================================
 # 5. IIT KGP VLAB SECTION RENDERERS
 # ======================================================================================
 
-def render_aim_section():
-    """Renders Section 1: Aim & Learning Objectives."""
-    st.markdown("### Aim")
-    st.info(
-        "**Experiment Aim**: To extract and identify domain-specific entities (Persons, Organizations, "
-        "Locations, and Concepts) from unstructured text to build structured knowledge (Module 1), "
-        "construct a relational Knowledge Graph with clean node topology, and develop an understanding of "
-        "probabilistic ranking and comparative retrieval performance (Module 2)."
+def render_page_header(section: str):
+    """Renders the shared page header. Purpose gets the full Experiment title as its heading;
+    every other section gets a small grey Experiment line and the section name as its heading."""
+    if section == "Purpose":
+        st.markdown(f"""
+<h1 style="font-size:1.95rem; font-weight:800; color:#1F2937; margin:0 0 0.35rem 0; line-height:1.3;">
+Experiment {EXPERIMENT_CONFIG['exp_number']}: {EXPERIMENT_CONFIG['title']}
+</h1>
+<p style="font-size:1.5rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+color:#1F2937; margin:0 0 1.3rem 0;">
+{section}
+</p>
+""", unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+<p style="font-size:0.82rem; font-weight:600; color:#9CA3AF; margin:0 0 0.3rem 0;">
+Experiment {EXPERIMENT_CONFIG['exp_number']}: {EXPERIMENT_CONFIG['title']}
+</p>
+<h1 style="font-size:1.5rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+color:#1F2937; margin:0 0 1.3rem 0; line-height:1.3;">
+{section}
+</h1>
+""", unsafe_allow_html=True)
+
+
+# Groups of staggered elements that should reveal on scroll rather than all at once on load.
+SCROLL_REVEAL_SELECTOR = (
+    ".kg-storyboard, .kg-term-grid, .kg-compare-grid, .kg-illus-card, "
+    ".kg-obj-list, .kg-metric-card"
+)
+
+
+def inject_scroll_reveal():
+    """Attaches an IntersectionObserver to the main app document so the kg-* animated
+    groups above play as each one scrolls into view, instead of all firing at once on load."""
+    components.html(f"""
+<script>
+(function() {{
+  const doc = window.parent.document;
+  const targets = doc.querySelectorAll('{SCROLL_REVEAL_SELECTOR}');
+  const io = new IntersectionObserver((entries) => {{
+    entries.forEach((entry) => {{
+      if (entry.isIntersecting) {{
+        entry.target.classList.add('kg-inview');
+        io.unobserve(entry.target);
+      }}
+    }});
+  }}, {{ root: null, threshold: 0.12, rootMargin: '0px 0px -80px 0px' }});
+  targets.forEach((el) => io.observe(el));
+}})();
+</script>
+""", height=0, width=0)
+
+
+def render_purpose_section():
+    """Renders Section 1: Purpose, an animated, mechanism-first walkthrough of why this experiment matters."""
+
+    st.markdown("""
+<style>
+@keyframes kgRise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes kgPop { 0% { opacity:0; transform:scale(0.35); } 70% { opacity:1; transform:scale(1.08); } 100% { opacity:1; transform:scale(1); } }
+@keyframes kgDraw { to { stroke-dashoffset:0; } }
+@keyframes kgPulse { 0%,100% { opacity:0.55; } 50% { opacity:1; } }
+@keyframes kgGrow { to { width:var(--w); } }
+@keyframes kgFadeIn { from { opacity:0; } to { opacity:1; } }
+
+.kg-eyebrow { display:inline-block; font-size:1.15rem; font-weight:700; letter-spacing:0.05em;
+  color:#3B82F6; margin-bottom:0.35rem; }
+.kg-eyebrow.kg-eyebrow-teal { color:#0E7C7B; text-transform:uppercase; font-size:0.7rem; letter-spacing:0.15em; }
+.kg-eyebrow.kg-eyebrow-ink { color:#4B5563; text-transform:uppercase; font-size:0.7rem; letter-spacing:0.15em; }
+
+.kg-section-title { font-size:1.5rem; font-weight:700; color:#1F2937; margin:0 0 0.6rem 0; }
+.kg-section-body { font-size:0.95rem; line-height:1.7; color:#4B5563; width:100%; }
+.kg-section-body b { color:#1F2937; }
+.kg-example { margin-top:0.9rem; padding:0.8rem 1rem; background:#FEFDFB; border:1px solid #E7E2D3;
+  border-left:3px solid #B3261E; border-radius:6px; font-size:0.87rem; color:#4B5563; line-height:1.6; width:100%; }
+.kg-example.kg-example-teal { border-left-color:#0E7C7B; }
+.kg-example code { background:rgba(31,41,55,0.06); padding:1px 5px; border-radius:4px; font-size:0.85em; }
+
+.kg-divider { height:1px; background:#E7E2D3; margin:2.1rem 0; border:none; }
+
+/* --- storyboard shell -------------------------------------------------- */
+.kg-storyboard { display:flex; gap:0.7rem; margin-top:1.3rem; align-items:stretch; flex-wrap:wrap; }
+.kg-story-step { flex:1 1 230px; min-width:220px; background:#FEFDFB; border:1px solid #E7E2D3; border-radius:14px;
+  padding:0.95rem 1rem 1.1rem; display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(31,41,55,0.04); }
+.kg-story-step.kg-story-step-win { border-color:#BFE3E1; background:#F6FBFA; }
+.kg-story-step.kg-story-step-lose { border-color:#F1D6D2; background:#FEFAF9; }
+.kg-story-eyebrow { font-size:0.62rem; font-weight:800; letter-spacing:0.1em; color:#9CA3AF; margin-bottom:0.25rem; }
+.kg-story-title { font-size:0.85rem; font-weight:700; color:#1F2937; margin-bottom:0.75rem; min-height:2.3em; }
+.kg-story-stage { flex:1; display:flex; align-items:center; justify-content:center; min-height:118px; }
+.kg-story-connector { display:flex; align-items:center; justify-content:center; flex:0 0 22px; }
+.kg-story-connector svg { opacity:0; animation:kgPop 0.4s ease forwards; animation-delay:0.9s; }
+
+/* --- step 1: plain keyword chips (no meaning attached) ------------------ */
+.kg-chip-row { display:flex; flex-wrap:wrap; gap:0.32rem; justify-content:center; align-content:center; }
+.kg-chip { padding:0.28rem 0.6rem; background:#F3F4F6; border:1px solid #D1D5DB; border-radius:999px;
+  font-size:0.72rem; font-weight:600; color:#4B5563; opacity:0; animation:kgPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+/* --- step 1 (method two): entities recognized inline, NER-style -------- */
+.kg-ner-sentence { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:center;
+  column-gap:0.4rem; row-gap:0.7rem; font-size:0.86rem; color:#1F2937; text-align:center; }
+.kg-ner-word { padding-bottom:0.3rem; }
+.kg-ent { display:flex; flex-direction:column; align-items:center; gap:0.22rem; opacity:0; animation:kgRise 0.4s ease forwards; }
+.kg-ent-value { padding:0.15rem 0.4rem; border-radius:5px; font-weight:700; }
+.kg-ent-tag { font-size:0.5rem; font-weight:800; letter-spacing:0.05em; padding:1px 5px; border-radius:4px;
+  color:#fff; white-space:nowrap; opacity:0; animation:kgPop 0.35s ease forwards; }
+.kg-ent-per .kg-ent-value { background:rgba(139,92,246,0.16); color:#6D28D9; } .kg-ent-per .kg-ent-tag { background:#8B5CF6; }
+.kg-ent-org .kg-ent-value { background:rgba(37,99,235,0.16); color:#1D4ED8; } .kg-ent-org .kg-ent-tag { background:#2563EB; }
+.kg-ent-loc .kg-ent-value { background:rgba(16,185,129,0.16); color:#047857; } .kg-ent-loc .kg-ent-tag { background:#10B981; }
+
+/* --- step 2 (method one): raw tally cards ------------------------------- */
+.kg-doc-mini { width:100%; background:#FFFFFF; border:1px solid #E5E7EB; border-radius:9px;
+  padding:0.5rem 0.65rem; margin-bottom:0.45rem; opacity:0; animation:kgRise 0.4s ease forwards; }
+.kg-doc-mini-title { font-size:0.68rem; font-weight:700; color:#1F2937; margin-bottom:0.3rem; }
+.kg-doc-mini.kg-doc-spam { border-color:#F1D6D2; background:#FFFAF9; }
+.kg-tally { display:inline-block; font-size:0.64rem; font-weight:600; color:#4B5563; background:#F3F4F6;
+  border-radius:5px; padding:1px 6px; margin:1px 3px 1px 0; }
+.kg-tally-hot { color:#B3261E; background:rgba(179,38,30,0.1); animation:kgPulse 1.6s ease-in-out infinite; }
+
+/* --- step 2 (method two): mini knowledge-graph triple ------------------- */
+.kg-graph-node { opacity:0; animation:kgPop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.kg-graph-label { font-size:7.5px; font-weight:700; fill:#1F2937; opacity:0; animation:kgFadeIn 0.3s ease forwards; }
+.kg-graph-edge-label { font-size:6.5px; font-weight:600; fill:#6B7280; opacity:0; animation:kgFadeIn 0.3s ease forwards; }
+.kg-graph-edge { stroke-dasharray:140; stroke-dashoffset:140; animation:kgDraw 0.55s ease forwards; }
+
+/* --- step 3 (both methods): ranking bar race ---------------------------- */
+.kg-barlist { width:100%; display:flex; flex-direction:column; gap:0.6rem; }
+.kg-bar-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.2rem; }
+.kg-bar-doc { font-size:0.68rem; font-weight:600; color:#4B5563; }
+.kg-bar-rank { font-size:0.68rem; font-weight:800; }
+.kg-bar-track { background:#EFEEE8; border-radius:6px; height:12px; overflow:hidden; }
+.kg-bar { height:100%; border-radius:6px; width:0; animation:kgGrow 0.9s cubic-bezier(.22,1,.36,1) forwards; }
+.kg-bar-good { background:#0E7C7B; } .kg-bar-spam { background:#B3261E; }
+.kg-bar-tag { display:inline-block; margin-top:0.28rem; font-size:0.6rem; font-weight:700; padding:1px 6px;
+  border-radius:4px; opacity:0; animation:kgPop 0.4s ease forwards; }
+.kg-bar-tag-bad { color:#B3261E; background:rgba(179,38,30,0.09); }
+.kg-bar-tag-good { color:#0E7C7B; background:rgba(14,124,123,0.09); }
+
+/* --- section 3: outcome recap ------------------------------------------- */
+.kg-obj-list { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.7rem; }
+.kg-obj-item { display:flex; align-items:flex-start; gap:0.65rem; padding:0.65rem 0.9rem;
+  background:#FEFDFB; border:1px solid #E7E2D3; border-radius:8px;
+  font-size:0.89rem; color:#4B5563; line-height:1.5; opacity:0; animation:kgRise 0.45s ease forwards; }
+.kg-obj-mark { flex-shrink:0; margin-top:2px; }
+
+/* --- scroll-triggered reveal: paused until scrolled into view ----------- */
+:is(.kg-storyboard, .kg-obj-list),
+:is(.kg-storyboard, .kg-obj-list) * { animation-play-state: paused; }
+:is(.kg-storyboard, .kg-obj-list).kg-inview,
+:is(.kg-storyboard, .kg-obj-list).kg-inview * { animation-play-state: running; }
+</style>
+
+<div class="kg-purpose-scope">
+
+<h1 style="font-size:1.4rem; font-weight:800; color:#1E3A8A; margin:0 0 0.5rem 0; line-height:1.3;">
+  Two Ways to Search the Same Document
+</h1>
+<p style="font-size:1rem; color:#4B5563; line-height:1.65; width:100%; margin:0;">
+  Keyword search counts word matches; entity-aware retrieval understands who or what those words refer to.
+</p>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown('<hr class="kg-divider"/>', unsafe_allow_html=True)
+
+    arrow_svg = (
+        '<div class="kg-story-connector"><svg width="20" height="20" viewBox="0 0 20 20">'
+        '<path d="M5 3 L14 10 L5 17" fill="none" stroke="#9CA3AF" stroke-width="2.4" '
+        'stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
     )
 
-    st.markdown("#### Learning Objectives (Mapped to KGIRS Modules 1 & 2)")
-    for idx, obj in enumerate(EXPERIMENT_CONFIG["objectives"]):
-        st.markdown(f"**{idx + 1}.** {obj}")
-
-    st.markdown("#### Target Syllabus Units (KGIRS Course Plan)")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(
-            "**Module 1: Introduction to Information Retrieval and Graphs**\n"
-            "- *Section 1.2*: Structured Knowledge vs. Unstructured Knowledge\n"
-            "- *Section 1.2*: Query structures (keyword, pattern matching, structured queries)\n"
-            "- *Section 1.3*: Sparse vs. Dense Retrieval and exact-match entity domains"
-        )
-    with col2:
-        st.markdown(
-            "**Module 2: Modeling in IR, Indexing and Ranking IR Models**\n"
-            "- *Section 2.1*: Review of IR Models — Vector Space Model vs. **Probabilistic Model**\n"
-            "- *Section 2.1*: Ranking IR Models and Problems on Probabilistic Model\n"
-            "- *Section 2.2*: Hybrid search combining lexical BM25 and structured entity knowledge\n"
-            "- *Section 6.2*: Comparative Retrieval Evaluation (Precision, Recall, MAP, NDCG)"
-        )
-
-
-def render_introduction_section():
-    """Renders Section 2: Introduction & Motivation."""
-    st.markdown("### Introduction")
+    # --- Section 1: Plain Keyword Search --------------------------------------------
     st.markdown("""
-In the **Knowledge Graph and Information Retrieval System (KGIRS)** curriculum, a foundational transition occurs between:
-1. **Unstructured Knowledge**: Free-form natural language texts, documents, and articles where facts are implicit and ambiguous (Module 1.2).
-2. **Structured Knowledge**: Explicit relational representations where discrete entities and relations are systematically codified as graphs and triples $(h, r, t)$.
+<div class="kg-purpose-scope">
+<p class="kg-eyebrow">Method One</p>
+<p class="kg-section-title">Plain Keyword Search</p>
+<p class="kg-section-body">
+A traditional search system reads a query as a bag of words and ranks documents by how often those
+words appear, nothing more. It cannot tell that a document repeating a term nine times is less useful
+than one that mentions it once, in exactly the right context. Term frequency becomes a proxy for
+relevance, and that proxy breaks easily, as the walkthrough below shows.
+</p>
+</div>
+""", unsafe_allow_html=True)
 
-#### The Need for Entity Identification
-Traditional search engines operate on unstructured text using bag-of-words keyword indexes. This introduces severe limitations:
-- **Polysemy and Synonymy**: Lexical terms like *"Apple"* or *"Jordan"* are ambiguous without entity categorization (e.g., `ORGANIZATION` vs. `PERSON` vs. `LOCATION`).
-- **Surface-Level Keyword Mismatch**: Simple string matching fails to capture that *"Geoffrey Hinton"* and *"University of Toronto"* share a formal research affiliation.
-- **Entity Identification**: By parsing text to detect **Persons**, **Organizations**, **Locations**, and **Domain Concepts**, we elevate unstructured text into structured graph entities.
+    keywords = ["Elena", "Voss", "Deep", "Learning", "Nimbus", "Toronto"]
+    chips_html = "".join(
+        f'<span class="kg-chip" style="animation-delay:{0.1 + i * 0.08:.2f}s">{w}</span>'
+        for i, w in enumerate(keywords)
+    )
 
-#### The Expected Outcome: Probabilistic Ranking & Comparative Retrieval Performance
-Under **Module 2 (Modeling in Information Retrieval)**, retrieval is framed around estimating the **probability of relevance** of a document given an information need:
-- **Probabilistic Ranking (Okapi BM25)** balances term frequency saturation ($k_1$) and document length normalization ($b$).
-- **Entity-Aware Probabilistic Ranking** injects structured Knowledge Graph entities directly into the probabilistic scoring equation.
-- **Comparative Retrieval Performance**: By measuring standard IR benchmark metrics (**Precision@K**, **Recall@K**, **MAP**, and **NDCG**), students empirically demonstrate how structured entity knowledge improves retrieval quality over baseline keyword search.
-""")
+    st.markdown(f"""
+<div class="kg-purpose-scope">
+<div class="kg-storyboard">
+
+  <div class="kg-story-step">
+    <p class="kg-story-eyebrow">STEP 1</p>
+    <p class="kg-story-title">The query becomes a bag of words</p>
+    <div class="kg-story-stage"><div class="kg-chip-row">{chips_html}</div></div>
+  </div>
+
+  {arrow_svg}
+
+  <div class="kg-story-step">
+    <p class="kg-story-eyebrow">STEP 2</p>
+    <p class="kg-story-title">Every document is scored by raw word count</p>
+    <div class="kg-story-stage" style="flex-direction:column; align-items:stretch;">
+      <div class="kg-doc-mini" style="animation-delay:0.15s;">
+        <div class="kg-doc-mini-title">Article: "Voss joins Nimbus Labs"</div>
+        <span class="kg-tally">Voss &times; 1</span><span class="kg-tally">Nimbus &times; 1</span><span class="kg-tally">Toronto &times; 1</span>
+      </div>
+      <div class="kg-doc-mini kg-doc-spam" style="animation-delay:0.35s;">
+        <div class="kg-doc-mini-title">Blog: keyword-stuffed page</div>
+        <span class="kg-tally kg-tally-hot">Nimbus &times; 9</span>
+      </div>
+    </div>
+  </div>
+
+  {arrow_svg}
+
+  <div class="kg-story-step kg-story-step-lose">
+    <p class="kg-story-eyebrow">STEP 3</p>
+    <p class="kg-story-title">Ranked purely by frequency</p>
+    <div class="kg-story-stage">
+      <div class="kg-barlist">
+        <div>
+          <div class="kg-bar-head"><span class="kg-bar-doc">Blog: keyword-stuffed page</span><span class="kg-bar-rank" style="color:#B3261E;">#1</span></div>
+          <div class="kg-bar-track"><div class="kg-bar kg-bar-spam" style="--w:92%; animation-delay:0.5s;"></div></div>
+          <span class="kg-bar-tag kg-bar-tag-bad" style="animation-delay:1.3s;">highest count, wrong document</span>
+        </div>
+        <div>
+          <div class="kg-bar-head"><span class="kg-bar-doc">Article: "Voss joins Nimbus Labs"</span><span class="kg-bar-rank" style="color:#4B5563;">#2</span></div>
+          <div class="kg-bar-track"><div class="kg-bar kg-bar-good" style="--w:34%; animation-delay:0.65s;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="kg-purpose-scope">
+<div class="kg-example">
+<b>The genuinely relevant article loses to a page that simply repeats <code>"Nimbus"</code>, because raw
+word count has no concept of <i>who</i> is being talked about, or whether the mention is real.</b>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown('<hr class="kg-divider"/>', unsafe_allow_html=True)
+
+    # --- Section 2: Entity-Aware, Probabilistic Retrieval ---------------------------
+    st.markdown("""
+<div class="kg-purpose-scope">
+<p class="kg-eyebrow kg-eyebrow-teal">METHOD TWO</p>
+<p class="kg-section-title">Entity-Aware, Probabilistic Retrieval</p>
+<p class="kg-section-body">
+This experiment adds two ideas on top of keyword matching. <b>Entity extraction</b> identifies which
+words are actually people, organizations, or places, and how they relate to one another. <b>Probabilistic
+ranking</b> (Okapi BM25, extended with an entity-salience boost) then reorders documents by their
+estimated probability of relevance, not their word count. Same query, same two documents: watch the
+ranking flip.
+</p>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="kg-purpose-scope">
+<div class="kg-storyboard">
+
+  <div class="kg-story-step">
+    <p class="kg-story-eyebrow">STEP 1</p>
+    <p class="kg-story-title">Entities are recognized, not just words</p>
+    <div class="kg-story-stage">
+<div class="kg-ner-sentence">
+<span class="kg-ent kg-ent-per" style="animation-delay:0.1s;"><span class="kg-ent-tag" style="animation-delay:0.3s;">PERSON</span><span class="kg-ent-value">Elena Voss</span></span>
+<span class="kg-ner-word">joined</span>
+<span class="kg-ent kg-ent-org" style="animation-delay:0.25s;"><span class="kg-ent-tag" style="animation-delay:0.45s;">ORGANIZATION</span><span class="kg-ent-value">Nimbus Labs</span></span>
+<span class="kg-ner-word">in</span>
+<span class="kg-ent kg-ent-loc" style="animation-delay:0.4s;"><span class="kg-ent-tag" style="animation-delay:0.6s;">LOCATION</span><span class="kg-ent-value">Toronto</span></span>
+</div>
+    </div>
+  </div>
+
+  {arrow}
+
+  <div class="kg-story-step">
+    <p class="kg-story-eyebrow">STEP 2</p>
+    <p class="kg-story-title">Entities link into a small knowledge graph</p>
+    <div class="kg-story-stage">
+<svg viewBox="0 0 220 140" width="100%" height="120">
+<line x1="42" y1="34" x2="168" y2="56" stroke="#9CA3AF" stroke-width="1.6" class="kg-graph-edge" style="animation-delay:0.75s;"/>
+<line x1="168" y1="56" x2="88" y2="118" stroke="#9CA3AF" stroke-width="1.6" class="kg-graph-edge" style="animation-delay:0.95s;"/>
+<text x="90" y="38" text-anchor="middle" class="kg-graph-edge-label" style="animation-delay:1.1s;">affiliated_with</text>
+<text x="150" y="94" text-anchor="middle" class="kg-graph-edge-label" style="animation-delay:1.3s;">located_in</text>
+<g class="kg-graph-node" style="animation-delay:0.1s;">
+<circle cx="42" cy="34" r="10" fill="#8B5CF6"/>
+<text x="42" y="16" text-anchor="middle" class="kg-graph-label">Elena Voss</text>
+</g>
+<g class="kg-graph-node" style="animation-delay:0.3s;">
+<circle cx="168" cy="56" r="10" fill="#2563EB"/>
+<text x="168" y="76" text-anchor="middle" class="kg-graph-label">Nimbus Labs</text>
+</g>
+<g class="kg-graph-node" style="animation-delay:0.5s;">
+<circle cx="88" cy="118" r="10" fill="#10B981"/>
+<text x="88" y="135" text-anchor="middle" class="kg-graph-label">Toronto</text>
+</g>
+</svg>
+    </div>
+  </div>
+
+  {arrow}
+
+  <div class="kg-story-step kg-story-step-win">
+    <p class="kg-story-eyebrow">STEP 3</p>
+    <p class="kg-story-title">Ranked by probability of relevance</p>
+    <div class="kg-story-stage">
+      <div class="kg-barlist">
+        <div>
+          <div class="kg-bar-head"><span class="kg-bar-doc">Article: "Voss joins Nimbus Labs"</span><span class="kg-bar-rank" style="color:#0E7C7B;">#1</span></div>
+          <div class="kg-bar-track"><div class="kg-bar kg-bar-good" style="--w:88%; animation-delay:0.5s;"></div></div>
+          <span class="kg-bar-tag kg-bar-tag-good" style="animation-delay:1.3s;">verified relationship, correct document</span>
+        </div>
+        <div>
+          <div class="kg-bar-head"><span class="kg-bar-doc">Blog: keyword-stuffed page</span><span class="kg-bar-rank" style="color:#4B5563;">#2</span></div>
+          <div class="kg-bar-track"><div class="kg-bar kg-bar-spam" style="--w:24%; animation-delay:0.65s;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+""".format(arrow=arrow_svg), unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="kg-purpose-scope">
+<div class="kg-example kg-example-teal">
+<b>The system now recognizes that one document is genuinely about <code>Elena Voss</code> joining
+<code>Nimbus Labs</code> in <code>Toronto</code>: a verified relationship, not a coincidence of
+repeated words, and ranks it first because of it.</b>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown('<hr class="kg-divider"/>', unsafe_allow_html=True)
+
+    # --- Section 3: What We Will Learn ----------------------------------------------
+    st.markdown("""
+<div class="kg-purpose-scope">
+<p class="kg-section-title">What We Will Learn</p>
+<p class="kg-section-body">
+By the end of this experiment, you will have built and compared both retrieval methods on the same
+corpus, and measured the difference with standard benchmarks rather than intuition alone.
+</p>
+</div>
+""", unsafe_allow_html=True)
+    objectives_html = "".join(
+        f'<div class="kg-obj-item" style="animation-delay:{0.15 + idx * 0.13:.2f}s">'
+        f'<svg class="kg-obj-mark" width="16" height="16" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">'
+        f'<circle cx="10" cy="10" r="8.5" fill="none" stroke="#0E7C7B" stroke-width="1.6"/>'
+        f'<path d="M6 10.2 L9 13.2 L14 7" fill="none" stroke="#0E7C7B" stroke-width="1.8" '
+        f'stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        f'<span>{obj}</span></div>'
+        for idx, obj in enumerate(EXPERIMENT_CONFIG["objectives"])
+    )
+    st.markdown(f'<div class="kg-purpose-scope"><div class="kg-obj-list">{objectives_html}</div></div>', unsafe_allow_html=True)
+
+    inject_scroll_reveal()
 
 
 def render_triple_diagram():
     """Illustrates one sample (head, relation, tail) triple color-coded by entity type."""
     color_map = {"PERSON": "#8B5CF6", "ORGANIZATION": "#2563EB", "LOCATION": "#10B981"}
     nodes = [
-        {"name": "Geoffrey Hinton", "type": "PERSON", "x": 0.0},
-        {"name": "University of Toronto", "type": "ORGANIZATION", "x": 1.0},
+        {"name": "Elena Voss", "type": "PERSON", "x": 0.0},
+        {"name": "Lakeside University", "type": "ORGANIZATION", "x": 1.0},
         {"name": "Toronto", "type": "LOCATION", "x": 2.0},
     ]
     edges = [(0, 1, "affiliated_with"), (1, 2, "located_in")]
@@ -1029,27 +1476,28 @@ def render_triple_diagram():
     for i, j, rel in edges:
         fig.add_trace(go.Scatter(
             x=[nodes[i]["x"], nodes[j]["x"]], y=[0, 0],
-            mode="lines", line=dict(width=2, color="#94A3B8"), hoverinfo="none", showlegend=False
+            mode="lines", line=dict(width=2.5, color="#CBD5E1"), hoverinfo="none", showlegend=False
         ))
         fig.add_annotation(
-            x=(nodes[i]["x"] + nodes[j]["x"]) / 2, y=0.12,
-            text=f"<i>{rel}</i>", showarrow=False, font=dict(size=11, color="#475569")
+            x=(nodes[i]["x"] + nodes[j]["x"]) / 2, y=0.15,
+            text=f"<i>{rel}</i>", showarrow=False, font=dict(size=13, color="#0E7C7B", family="Georgia, serif")
         )
 
     fig.add_trace(go.Scatter(
         x=[n["x"] for n in nodes], y=[0] * len(nodes),
         mode="markers+text",
-        marker=dict(size=42, color=[color_map[n["type"]] for n in nodes], line=dict(width=2, color="#1E293B")),
+        marker=dict(size=48, color=[color_map[n["type"]] for n in nodes], line=dict(width=2.5, color="#1F2937")),
         text=[n["name"] for n in nodes], textposition="bottom center",
+        textfont=dict(size=14, color="#1F2937", family="Georgia, serif"),
         hovertext=[f"{n['name']} ({n['type']})" for n in nodes], hoverinfo="text", showlegend=False
     ))
     fig.update_layout(
-        height=200, margin=dict(l=10, r=10, t=10, b=40),
-        xaxis=dict(visible=False, range=[-0.5, 2.5]), yaxis=dict(visible=False, range=[-0.3, 0.3]),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+        height=220, margin=dict(l=10, r=10, t=10, b=45),
+        xaxis=dict(visible=False, range=[-0.5, 2.5]), yaxis=dict(visible=False, range=[-0.3, 0.35]),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Georgia, serif")
     )
     st.plotly_chart(fig, use_container_width=True)
-    st.caption("Illustration: a relational triple chain — each colored node is a typed entity, each labeled edge a relation.")
 
 
 def render_prp_ranking_diagram():
@@ -1057,212 +1505,480 @@ def render_prp_ranking_diagram():
     docs = [f"D{i}" for i in range(1, 7)]
     probs = [0.92, 0.81, 0.63, 0.44, 0.27, 0.11]
     fig = go.Figure(go.Bar(
-        x=docs, y=probs, marker_color=probs, marker_colorscale="Blues",
-        text=[f"{p:.2f}" for p in probs], textposition="outside"
+        x=docs, y=probs, marker_color="#0E7C7B",
+        text=[f"{p:.2f}" for p in probs], textposition="outside",
+        textfont=dict(size=13, color="#1F2937")
     ))
     fig.update_layout(
-        height=260, margin=dict(l=10, r=10, t=30, b=10),
-        title=dict(text="Documents Ranked by P(R=1 | D, Q)", font=dict(size=13)),
-        yaxis=dict(title="Estimated Probability of Relevance", range=[0, 1.05]),
-        xaxis=dict(title="Documents in Ranked Order"),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+        height=290, margin=dict(l=10, r=10, t=20, b=10),
+        yaxis=dict(title="Estimated probability of relevance", range=[0, 1.08],
+                   gridcolor="#EFEEE8", tickfont=dict(size=12, color="#4B5563"),
+                   title_font=dict(size=13, color="#4B5563")),
+        xaxis=dict(title="Documents, in ranked order", tickfont=dict(size=13, color="#1F2937"),
+                   title_font=dict(size=13, color="#4B5563")),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Georgia, serif")
     )
     st.plotly_chart(fig, use_container_width=True)
-    st.caption("Illustration: PRP orders documents so relevance probability strictly decreases down the ranked list.")
 
 
 def render_bm25_saturation_diagram():
     """Illustrates BM25 term-frequency saturation for a few k1 values."""
     tf_vals = list(range(0, 11))
     fig = go.Figure()
-    for k1, color in [(1.0, "#94A3B8"), (1.5, "#2563EB"), (2.5, "#F59E0B")]:
+    for k1, color in [(1.0, "#94A3B8"), (1.5, "#0E7C7B"), (2.5, "#B3261E")]:
         y_vals = [tf * (k1 + 1.0) / (tf + k1) for tf in tf_vals]
-        fig.add_trace(go.Scatter(x=tf_vals, y=y_vals, mode="lines+markers", name=f"k1 = {k1}", line=dict(color=color)))
+        fig.add_trace(go.Scatter(
+            x=tf_vals, y=y_vals, mode="lines+markers", name=f"k1 = {k1}",
+            line=dict(color=color, width=2.5), marker=dict(size=6)
+        ))
     fig.update_layout(
-        height=280, margin=dict(l=10, r=10, t=30, b=10),
-        title=dict(text="Term Frequency Saturation Curve", font=dict(size=13)),
-        xaxis=dict(title="Raw term frequency f(q, D)"),
-        yaxis=dict(title="TF component of BM25 score"),
-        legend=dict(orientation="h", y=-0.2),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+        height=320, margin=dict(l=10, r=10, t=20, b=10),
+        xaxis=dict(title="Raw term frequency, f(q, D)", gridcolor="#EFEEE8",
+                   tickfont=dict(size=12, color="#4B5563"), title_font=dict(size=13, color="#4B5563")),
+        yaxis=dict(title="TF component of the BM25 score", gridcolor="#EFEEE8",
+                   tickfont=dict(size=12, color="#4B5563"), title_font=dict(size=13, color="#4B5563")),
+        legend=dict(orientation="h", y=-0.22, font=dict(size=12, color="#1F2937")),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Georgia, serif")
     )
     st.plotly_chart(fig, use_container_width=True)
-    st.caption("Illustration: higher k1 lets repeated term occurrences keep contributing longer before the score plateaus.")
 
 
 def render_ndcg_discount_diagram():
     """Illustrates the logarithmic position discount used in NDCG."""
     ranks = list(range(1, 11))
     discounts = [1.0 / math.log2(r + 1) for r in ranks]
-    fig = go.Figure(go.Bar(x=ranks, y=discounts, marker_color="#10B981"))
+    fig = go.Figure(go.Bar(
+        x=ranks, y=discounts, marker_color="#10B981",
+        text=[f"{d:.2f}" for d in discounts], textposition="outside",
+        textfont=dict(size=11, color="#1F2937")
+    ))
     fig.update_layout(
-        height=260, margin=dict(l=10, r=10, t=30, b=10),
-        title=dict(text="NDCG Positional Discount by Rank", font=dict(size=13)),
-        xaxis=dict(title="Rank Position", dtick=1),
-        yaxis=dict(title="Discount Weight 1 / log2(rank + 1)"),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+        height=290, margin=dict(l=10, r=10, t=20, b=10),
+        xaxis=dict(title="Rank position", dtick=1, tickfont=dict(size=12, color="#4B5563"),
+                   title_font=dict(size=13, color="#4B5563")),
+        yaxis=dict(title="Discount weight, 1 / log2(rank + 1)", gridcolor="#EFEEE8",
+                   tickfont=dict(size=12, color="#4B5563"), title_font=dict(size=13, color="#4B5563")),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Georgia, serif")
     )
     st.plotly_chart(fig, use_container_width=True)
-    st.caption("Illustration: a relevant document found at rank 1 counts far more than the same document found at rank 10.")
 
 
 def render_theory_section():
-    """Renders Section 3: In-Depth Theoretical Foundations."""
-    st.markdown("### Theoretical Foundations")
-
-    video_path = os.path.join(os.path.dirname(__file__), "video", "Experiment6_KGIRS_explainer_1.mp4")
-    if os.path.exists(video_path):
-        st.markdown("#### Explaination video")
-        st.video(video_path)
-        st.divider()
-
-    st.markdown("#### 1. Entity Extraction & Knowledge Graph Construction")
+    """Renders Section 2: In-Depth Theoretical Foundations, from first principles to evaluation."""
     st.markdown("""
-A Knowledge Graph $\\mathcal{G} = (\\mathcal{E}, \\mathcal{R}, \\mathcal{T})$ consists of a set of entities $\\mathcal{E}$, relation types $\\mathcal{R}$, and factual triples $\\mathcal{T} \\subseteq \\mathcal{E} \\times \\mathcal{R} \\times \\mathcal{E}$.
-- **Entity Mentions**: Substrings in text tagged with semantic categories:
-  - **`PERSON`**: Key researchers, executives, pioneers (e.g., *Geoffrey Hinton*, *Demis Hassabis*).
-  - **`ORGANIZATION`**: Companies, research labs, universities (e.g., *DeepMind*, *University of Toronto*, *Meta AI*).
-  - **`LOCATION`**: Headquarters, lab sites, cities (e.g., *London*, *Toronto*, *New York*).
-  - **`CONCEPT`**: Technical domains, algorithmic paradigms (e.g., *Deep Learning*, *Reinforcement Learning*).
-- **Relational Triples**: Directed links representing predicates:
-  $$\\text{Triple} = (\\text{Head Entity}, \\text{Predicate Relation}, \\text{Tail Entity})$$
-  Example: `(Geoffrey Hinton, affiliated_with, Google Brain)`
-""")
+<style>
+@keyframes kgThRise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes kgThPop { 0% { opacity:0; transform:scale(0.4); } 70% { opacity:1; transform:scale(1.06); } 100% { opacity:1; transform:scale(1); } }
+@keyframes kgThDraw { to { stroke-dashoffset:0; } }
+@keyframes kgThFade { from { opacity:0; } to { opacity:1; } }
+
+.kg-th-intro { font-size:1rem; line-height:1.8; color:#4B5563; width:100%; margin-bottom:0.3rem; }
+
+.kg-th-head { display:flex; align-items:center; gap:0.65rem; margin:0.3rem 0 0.9rem 0; }
+.kg-th-num { flex-shrink:0; width:1.7rem; height:1.7rem; border-radius:50%; background:#1F2937; color:#fff;
+  font-weight:700; font-size:0.78rem; display:flex; align-items:center; justify-content:center; }
+.kg-th-title { font-size:1.12rem; font-weight:700; color:#1F2937; line-height:1.35; letter-spacing:0.01em; }
+
+.kg-th-body { font-size:1rem; line-height:1.8; color:#4B5563; width:100%; }
+.kg-th-body b { color:#1F2937; }
+.kg-th-body code { background:rgba(31,41,55,0.07); padding:2px 7px; border-radius:5px; font-size:0.9em; color:#1F2937; }
+
+.kg-th-quote { margin:1.1rem 0; padding:1.1rem 1.4rem; background:#F6FBFA; border-left:4px solid #0E7C7B;
+  border-radius:8px; font-style:italic; color:#1F2937; font-size:1.02rem; line-height:1.75; width:100%; }
+
+.kg-formula-label { font-size:0.7rem; font-weight:800; letter-spacing:0.13em; text-transform:uppercase;
+  color:#B3261E; margin:0 0 0.6rem 0; }
+.kg-formula-label.teal { color:#0E7C7B; }
+
+.kg-term-grid { display:flex; flex-wrap:wrap; gap:0.75rem; margin:1.1rem 0 1.4rem 0; }
+.kg-term-card { flex:1 1 210px; min-width:200px; background:#FEFDFB; border:1px solid #E7E2D3; border-radius:11px;
+  border-left:4px solid #0E7C7B; padding:0.95rem 1.1rem; opacity:0; animation:kgThRise 0.4s ease forwards; }
+.kg-term-symbol { font-size:1.05rem; font-weight:800; color:#0E7C7B; margin-bottom:0.35rem; font-family:"Courier New", monospace; }
+.kg-term-label { font-size:0.88rem; font-weight:700; color:#1F2937; margin-bottom:0.3rem; }
+.kg-term-desc { font-size:0.88rem; color:#4B5563; line-height:1.55; }
+
+.kg-compare-grid { display:flex; flex-wrap:wrap; gap:1rem; margin:1.1rem 0 1.4rem 0; }
+.kg-compare-card { flex:1 1 300px; min-width:270px; background:#FEFDFB; border:1px solid #E7E2D3; border-radius:14px;
+  padding:1.2rem 1.3rem; opacity:0; animation:kgThRise 0.45s ease forwards; }
+.kg-compare-icon { margin-bottom:0.7rem; }
+.kg-compare-title { font-size:1.05rem; font-weight:800; color:#1F2937; margin-bottom:0.5rem; }
+.kg-compare-desc { font-size:0.92rem; color:#4B5563; line-height:1.65; }
+
+.kg-metric-card { background:#FEFDFB; border:1px solid #E7E2D3; border-left:4px solid #B3261E; border-radius:11px;
+  padding:1rem 1.2rem; margin-bottom:0.8rem; opacity:0; animation:kgThRise 0.4s ease forwards; }
+.kg-metric-name { font-size:1rem; font-weight:800; color:#1F2937; margin-bottom:0.5rem; }
+.kg-metric-desc { font-size:0.9rem; color:#4B5563; line-height:1.6; margin-top:0.55rem; }
+
+.kg-illus-card { background:#FEFDFB; border:1px solid #E7E2D3; border-radius:14px; padding:1.2rem 1.3rem 1rem;
+  box-shadow:0 1px 2px rgba(31,41,55,0.05); margin:1rem 0 1.4rem 0; }
+.kg-illus-caption { font-size:0.85rem; color:#6B7280; margin-top:0.5rem; line-height:1.5; }
+
+.kg-gnode { opacity:0; animation:kgThPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.kg-gedge { stroke-dasharray:220; stroke-dashoffset:220; animation:kgThDraw 0.6s ease forwards; }
+.kg-glabel { opacity:0; animation:kgThFade 0.4s ease forwards; }
+.kg-gpill { opacity:0; animation:kgThPop 0.4s ease forwards; }
+
+.katex-display { overflow-x:auto; overflow-y:hidden; padding-bottom:6px; }
+
+/* --- scroll-triggered reveal: paused until scrolled into view ----------- */
+:is(.kg-term-grid, .kg-compare-grid, .kg-illus-card, .kg-metric-card),
+:is(.kg-term-grid, .kg-compare-grid, .kg-illus-card, .kg-metric-card) * { animation-play-state: paused; }
+:is(.kg-term-grid, .kg-compare-grid, .kg-illus-card, .kg-metric-card).kg-inview,
+:is(.kg-term-grid, .kg-compare-grid, .kg-illus-card, .kg-metric-card).kg-inview * { animation-play-state: running; }
+</style>
+<p class="kg-th-intro">Before comparing the two retrieval methods hands-on, this section builds up the
+vocabulary and math they rely on, starting from what "data" and a "graph" even mean, through entity
+extraction and Knowledge Graphs, to the probabilistic ranking formulas the Simulation section runs live.</p>
+""", unsafe_allow_html=True)
+
+    # --- 0. Foundations ---------------------------------------------------------------
+    st.markdown(
+        '<div class="kg-th-head"><span class="kg-th-num">0</span>'
+        '<span class="kg-th-title">Foundations: From Raw Text to Structured Knowledge</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body"><b>Data</b> is any recorded fact (a word, a number, a timestamp) before it has '
+        'been organized into something a program can reason about. How that data is organized determines what a '
+        'computer can and cannot do with it:</p>',
+        unsafe_allow_html=True
+    )
+
+    compare_cards = [
+        {
+            "title": "Unstructured data",
+            "desc": "Free-form text, images, or audio with no predefined schema: a news article, an email, "
+                    "a PDF. A computer sees only characters or pixels, not meaning, until it is processed.",
+            "icon": '<svg width="46" height="46" viewBox="0 0 46 46"><rect x="8" y="4" width="30" height="38" rx="4" '
+                    'fill="#FFFFFF" stroke="#B3261E" stroke-width="2"/><line x1="14" y1="14" x2="32" y2="14" '
+                    'stroke="#F1D6D2" stroke-width="3" stroke-linecap="round"/><line x1="14" y1="21" x2="32" y2="21" '
+                    'stroke="#F1D6D2" stroke-width="3" stroke-linecap="round"/><line x1="14" y1="28" x2="26" y2="28" '
+                    'stroke="#F1D6D2" stroke-width="3" stroke-linecap="round"/><line x1="14" y1="35" x2="30" y2="35" '
+                    'stroke="#F1D6D2" stroke-width="3" stroke-linecap="round"/></svg>',
+        },
+        {
+            "title": "Structured data",
+            "desc": "Information organized into a fixed schema (rows and columns, or nodes and typed "
+                    "relationships) so a program can query it directly, e.g. a spreadsheet or a Knowledge Graph.",
+            "icon": '<svg width="46" height="46" viewBox="0 0 46 46"><rect x="4" y="6" width="38" height="34" rx="4" '
+                    'fill="#FFFFFF" stroke="#0E7C7B" stroke-width="2"/><line x1="4" y1="17" x2="42" y2="17" '
+                    'stroke="#0E7C7B" stroke-width="1.6"/><line x1="4" y1="28" x2="42" y2="28" stroke="#0E7C7B" '
+                    'stroke-width="1.6"/><line x1="17" y1="6" x2="17" y2="40" stroke="#0E7C7B" stroke-width="1.6"/>'
+                    '<line x1="30" y1="6" x2="30" y2="40" stroke="#0E7C7B" stroke-width="1.6"/></svg>',
+        },
+    ]
+    compare_html = "".join(
+        f'<div class="kg-compare-card" style="animation-delay:{0.1 + i * 0.15:.2f}s">'
+        f'<div class="kg-compare-icon">{c["icon"]}</div>'
+        f'<div class="kg-compare-title">{c["title"]}</div>'
+        f'<div class="kg-compare-desc">{c["desc"]}</div></div>'
+        for i, c in enumerate(compare_cards)
+    )
+    st.markdown(f'<div class="kg-compare-grid">{compare_html}</div>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<p class="kg-th-body">A <b>Knowledge Graph</b> is one way to structure data: a graph is simply a set of '
+        '<b>nodes</b> (things) connected by <b>edges</b> (relationships between them). The terms below are used '
+        'throughout the rest of this experiment:</p>',
+        unsafe_allow_html=True
+    )
+
+    graph_terms = [
+        ("Node / Vertex", "A single entity in the graph: a person, organization, location, or concept. Drawn as a circle."),
+        ("Edge", "A connection between two nodes, representing a relationship between the entities it joins."),
+        ("Directed edge", "An edge with direction: A &rarr; B means &ldquo;A relates to B&rdquo;, drawn as an arrow."),
+        ("Labeled edge", "An edge tagged with the relation it represents, e.g. affiliated_with or located_in."),
+        ("Degree", "The number of edges connected to a node: how many relationships that entity has."),
+        ("Path", "A sequence of edges connecting one node to another through the graph."),
+        ("Triple", "The smallest unit of a Knowledge Graph: (head entity, relation, tail entity)."),
+    ]
+    terms_html = "".join(
+        f'<div class="kg-term-card" style="animation-delay:{0.06 * i:.2f}s">'
+        f'<div class="kg-term-label">{label}</div><div class="kg-term-desc">{desc}</div></div>'
+        for i, (label, desc) in enumerate(graph_terms)
+    )
+    st.markdown(f'<div class="kg-term-grid">{terms_html}</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="kg-illus-card">
+<svg viewBox="0 0 380 210" width="100%" height="230">
+<defs>
+<marker id="kgArrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+<path d="M0,0 L9,4.5 L0,9 Z" fill="#94A3B8"/>
+</marker>
+</defs>
+<line x1="82" y1="55" x2="255" y2="45" stroke="#94A3B8" stroke-width="2" marker-end="url(#kgArrow)" class="kg-gedge" style="animation-delay:0.5s;"/>
+<line x1="255" y1="55" x2="270" y2="150" stroke="#94A3B8" stroke-width="2" marker-end="url(#kgArrow)" class="kg-gedge" style="animation-delay:0.7s;"/>
+<line x1="70" y1="70" x2="65" y2="150" stroke="#94A3B8" stroke-width="2" marker-end="url(#kgArrow)" class="kg-gedge" style="animation-delay:0.9s;"/>
+<text x="165" y="38" text-anchor="middle" class="kg-glabel" style="animation-delay:1.1s; font-size:11px; fill:#0E7C7B; font-weight:600;">affiliated_with</text>
+<text x="290" y="105" text-anchor="middle" class="kg-glabel" style="animation-delay:1.25s; font-size:11px; fill:#0E7C7B; font-weight:600;">located_in</text>
+<text x="30" y="115" text-anchor="middle" class="kg-glabel" style="animation-delay:1.4s; font-size:11px; fill:#0E7C7B; font-weight:600;">pioneered</text>
+<g class="kg-gnode" style="animation-delay:0.1s;">
+<circle cx="60" cy="60" r="16" fill="#8B5CF6" stroke="#1F2937" stroke-width="2"/>
+<text x="60" y="94" text-anchor="middle" style="font-size:12px; font-weight:700; fill:#1F2937;">Node A</text>
+</g>
+<g class="kg-gpill" style="animation-delay:1.6s;">
+<rect x="82" y="60" width="76" height="20" rx="10" fill="#1F2937"/>
+<text x="120" y="74" text-anchor="middle" style="font-size:10px; font-weight:700; fill:#FFFFFF;">DEGREE = 2</text>
+</g>
+<g class="kg-gnode" style="animation-delay:0.3s;">
+<circle cx="260" cy="45" r="16" fill="#2563EB" stroke="#1F2937" stroke-width="2"/>
+<text x="260" y="20" text-anchor="middle" style="font-size:12px; font-weight:700; fill:#1F2937;">Node B</text>
+</g>
+<g class="kg-gnode" style="animation-delay:0.5s;">
+<circle cx="275" cy="160" r="16" fill="#10B981" stroke="#1F2937" stroke-width="2"/>
+<text x="275" y="188" text-anchor="middle" style="font-size:12px; font-weight:700; fill:#1F2937;">Node C</text>
+</g>
+<g class="kg-gnode" style="animation-delay:0.7s;">
+<circle cx="60" cy="160" r="16" fill="#F59E0B" stroke="#1F2937" stroke-width="2"/>
+<text x="60" y="188" text-anchor="middle" style="font-size:12px; font-weight:700; fill:#1F2937;">Node D</text>
+</g>
+<g class="kg-gpill" style="animation-delay:1.8s;">
+<rect x="95" y="118" width="150" height="22" rx="11" fill="#B3261E"/>
+<text x="170" y="133" text-anchor="middle" style="font-size:10px; font-weight:700; fill:#FFFFFF;">TRIPLE: (A, affiliated_with, B)</text>
+</g>
+</svg>
+<p class="kg-illus-caption">A directed edge points from one node to another; a node's degree counts how many edges touch it; a labeled edge plus its two endpoints together form one triple.</p>
+</div>
+""", unsafe_allow_html=True)
+
+    st.divider()
+
+    # --- 1. Entity Extraction & Knowledge Graph Construction --------------------------
+    st.markdown(
+        '<div class="kg-th-head"><span class="kg-th-num">1</span>'
+        '<span class="kg-th-title">Entity Extraction &amp; Knowledge Graph Construction</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body">A Knowledge Graph formalizes the terms above into a single structure: a set of '
+        'entities, the relation types that can connect them, and the factual triples actually observed in the '
+        'text.</p>',
+        unsafe_allow_html=True
+    )
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label teal">DEFINITION</p>', unsafe_allow_html=True)
+        st.latex(r"\boldsymbol{\mathcal{G} = (\mathcal{E}, \mathcal{R}, \mathcal{T})}")
+        st.caption("A set of entities E, a set of relation types R, and a set of triples T ⊆ E × R × E.")
+
+    st.markdown(
+        '<p class="kg-th-body">Every entity mention in the source text is tagged with one of four semantic '
+        'categories:</p>',
+        unsafe_allow_html=True
+    )
+    entity_types = [
+        ("PERSON", "#8B5CF6", "Key researchers, executives, pioneers.", "Elena Voss, Kavi Rajan"),
+        ("ORGANIZATION", "#2563EB", "Companies, research labs, universities.", "Cortex Labs, Lakeside University"),
+        ("LOCATION", "#10B981", "Headquarters, lab sites, cities.", "London, Toronto, New York"),
+        ("CONCEPT", "#F59E0B", "Technical domains, algorithmic paradigms.", "Deep Learning, Reinforcement Learning"),
+    ]
+    etype_html = "".join(
+        f'<div class="kg-term-card" style="border-left-color:{color}; animation-delay:{0.08 * i:.2f}s">'
+        f'<div class="kg-term-symbol" style="color:{color};">{name}</div>'
+        f'<div class="kg-term-desc">{desc}<br/><i>e.g. {ex}</i></div></div>'
+        for i, (name, color, desc, ex) in enumerate(entity_types)
+    )
+    st.markdown(f'<div class="kg-term-grid">{etype_html}</div>', unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label teal">RELATIONAL TRIPLE</p>', unsafe_allow_html=True)
+        st.latex(r"\text{Triple} = (\text{Head},\ \text{Relation},\ \text{Tail})")
+        st.caption("Example: (Elena Voss, affiliated_with, Nimbus AI Labs)")
     render_triple_diagram()
 
     st.divider()
-    st.markdown("#### 2. The Probability Ranking Principle (PRP)")
-    st.markdown("""
-Formulated by Stephen E. Robertson in 1977, the **Probability Ranking Principle** states:
-> *"If a reference retrieval system's response to each request is a ranking of the documents in order of decreasing probability of relevance to the user, the overall effectiveness of the system will be maximized."*
 
-Mathematically, let $R \\in \\{0, 1\\}$ denote binary relevance. Documents $D$ are ranked by the posterior odds of relevance given query $Q$:
-$$\\text{Odds}(R=1 | D, Q) = \\frac{P(R=1 | D, Q)}{P(R=0 | D, Q)}$$
-""")
+    # --- 2. Probability Ranking Principle ----------------------------------------------
+    st.markdown(
+        '<div class="kg-th-head"><span class="kg-th-num">2</span>'
+        '<span class="kg-th-title">The Probability Ranking Principle (PRP)</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body">Formulated by Stephen E. Robertson in 1977, the Probability Ranking Principle is '
+        'the theoretical basis for every ranked search system, including this one:</p>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<div class="kg-th-quote">&ldquo;If a reference retrieval system\'s response to each request is a '
+        'ranking of the documents in order of decreasing probability of relevance to the user, the overall '
+        'effectiveness of the system will be maximized.&rdquo;</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body">Formally, let <code>R &isin; {0, 1}</code> denote binary relevance. Documents '
+        '<code>D</code> are ranked by the posterior odds of relevance given query <code>Q</code>:</p>',
+        unsafe_allow_html=True
+    )
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label">KEY FORMULA</p>', unsafe_allow_html=True)
+        st.latex(r"\boldsymbol{\text{Odds}(R{=}1 \mid D, Q) = \dfrac{P(R{=}1 \mid D, Q)}{P(R{=}0 \mid D, Q)}}")
     render_prp_ranking_diagram()
 
     st.divider()
-    st.markdown("#### 3. Robertson-Spärck Jones Okapi BM25 Model")
-    st.markdown("""
-The Okapi BM25 formula is a non-linear term saturation probabilistic model:
-$$\\text{BM25}(D, Q) = \\sum_{q \\in Q} \\text{IDF}(q) \\cdot \\frac{f(q, D) \\cdot (k_1 + 1)}{f(q, D) + k_1 \\cdot \\left(1 - b + b \\cdot \\frac{|D|}{\\text{avgdl}}\\right)}$$
 
-Where:
-- **$f(q, D)$**: Term frequency of query term $q$ in document $D$.
-- **$|D|$ and $\\text{avgdl}$**: Document length and average document length across the entire collection.
-- **$k_1$ (Term Saturation Parameter)**: Typically set between $1.2$ and $2.0$. It calibrates how quickly term frequency saturation is attained.
-- **$b$ (Length Normalization Parameter)**: Typically set around $0.75$. When $b=1$, full document length normalization is applied; when $b=0$, length normalization is disabled.
-- **$\\text{IDF}(q)$**: Probabilistic Inverse Document Frequency:
-  $$\\text{IDF}(q) = \\ln \\left( 1 + \\frac{N - n(q) + 0.5}{n(q) + 0.5} \\right)$$
-""")
+    # --- 3. Okapi BM25 -------------------------------------------------------------------
+    st.markdown(
+        '<div class="kg-th-head"><span class="kg-th-num">3</span>'
+        '<span class="kg-th-title">Robertson&ndash;Sp&auml;rck Jones Okapi BM25 Model</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body">BM25 is the non-linear, term-saturating probabilistic model this experiment uses '
+        'as its plain-keyword baseline:</p>',
+        unsafe_allow_html=True
+    )
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label">KEY FORMULA</p>', unsafe_allow_html=True)
+        st.latex(r"""\begin{gathered}
+\boldsymbol{\text{BM25}(D, Q) = \sum_{q \in Q} \text{IDF}(q) \cdot {}} \\[6pt]
+\boldsymbol{\frac{f(q, D) \cdot (k_1 + 1)}{f(q, D) + k_1 \left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}}
+\end{gathered}""")
+
+    st.markdown('<p class="kg-th-body">Each term in that formula plays a distinct role:</p>', unsafe_allow_html=True)
+    bm25_terms = [
+        ("f(q, D)", "Term frequency", "How many times query term q occurs in document D."),
+        ("|D|, avgdl", "Length ratio", "Document length vs. the average document length across the collection."),
+        ("k1 &isin; [1.2, 2.0]", "Term saturation", "How quickly extra occurrences of a term stop adding score."),
+        ("b &asymp; 0.75", "Length normalization", "How strongly long documents are penalized; b=0 disables it."),
+    ]
+    bm25_html = "".join(
+        f'<div class="kg-term-card" style="animation-delay:{0.08 * i:.2f}s">'
+        f'<div class="kg-term-symbol">{sym}</div><div class="kg-term-label">{label}</div>'
+        f'<div class="kg-term-desc">{desc}</div></div>'
+        for i, (sym, label, desc) in enumerate(bm25_terms)
+    )
+    st.markdown(f'<div class="kg-term-grid">{bm25_html}</div>', unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label teal">SUPPORTING FORMULA &middot; INVERSE DOCUMENT FREQUENCY</p>', unsafe_allow_html=True)
+        st.latex(r"\text{IDF}(q) = \ln\left(1 + \frac{N - n(q) + 0.5}{n(q) + 0.5}\right)")
+        st.caption("N = total documents in the collection; n(q) = documents containing term q.")
     render_bm25_saturation_diagram()
 
     st.divider()
-    st.markdown("#### 4. Entity-Aware Probabilistic Ranking")
-    st.markdown("""
-To incorporate Knowledge Graph semantics into probabilistic ranking, the document score combines the lexical BM25 score with an **Entity Salience Boost**:
-$$\\text{Score}_{\\text{Entity-BM25}}(D, Q) = \\text{BM25}(D, Q) + \\alpha \\sum_{e \\in \\mathcal{E}_Q \\cap \\mathcal{E}_D} \\text{Salience}(e) + \\beta \\sum_{(h, r, t) \\in \\mathcal{T}_D \\mid h, t \\in \\mathcal{E}_Q} \\text{RelWeight}(r)$$
 
-Where $\\alpha$ is the entity boost factor and $\\mathcal{E}_Q, \\mathcal{E}_D$ represent verified entities in query and document respectively.
-""")
+    # --- 4. Entity-Aware Probabilistic Ranking -------------------------------------------
+    st.markdown(
+        '<div class="kg-th-head"><span class="kg-th-num">4</span>'
+        '<span class="kg-th-title">Entity-Aware Probabilistic Ranking</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body">To fold Knowledge Graph semantics into ranking, the entity-aware score adds two '
+        'more terms on top of the lexical BM25 score: a boost for verified shared entities, and a boost for '
+        'verified shared relationships:</p>',
+        unsafe_allow_html=True
+    )
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label">KEY FORMULA</p>', unsafe_allow_html=True)
+        st.latex(r"""\begin{gathered}
+\boldsymbol{\text{Score}(D, Q) = \text{BM25}(D, Q)} \\[6pt]
+\boldsymbol{{}+ \alpha \cdot \text{EntityBoost} + \beta \cdot \text{RelationBoost}}
+\end{gathered}""")
+        st.caption("α and β are tunable boost factors that control how much verified entities and relations can shift the lexical BM25 score.")
+
+    col_eb, col_rb = st.columns(2)
+    with col_eb:
+        with st.container(border=True):
+            st.markdown('<p class="kg-formula-label teal">ENTITY BOOST</p>', unsafe_allow_html=True)
+            st.latex(r"\sum_{e \,\in\, \mathcal{E}_Q \cap \mathcal{E}_D} \text{Salience}(e)")
+            st.caption("Sums the salience of every entity that appears in both the query and the document.")
+    with col_rb:
+        with st.container(border=True):
+            st.markdown('<p class="kg-formula-label teal">RELATION BOOST</p>', unsafe_allow_html=True)
+            st.latex(r"\sum_{(h,r,t) \,\in\, \mathcal{T}_D} \text{RelWeight}(r)")
+            st.caption("Sums the weight of every document triple whose head h and tail t are both verified query entities.")
 
     st.divider()
-    st.markdown("#### 5. Comparative Evaluation Metrics")
-    st.markdown("""
-- **Precision@K**: $\\frac{|\\text{Relevant Documents} \\cap \\text{Top K Documents}|}{K}$
-- **Recall@K**: $\\frac{|\\text{Relevant Documents} \\cap \\text{Top K Documents}|}{|\\text{Total Relevant Documents}|}$
-- **Mean Average Precision (MAP)**: $\\text{MAP} = \\frac{1}{|Q|} \\sum_{q=1}^{|Q|} \\frac{1}{|R_q|} \\sum_{k=1}^{N} P_q(k) \\times \\text{rel}_q(k)$
-- **Normalized Discounted Cumulative Gain (NDCG@K)**:
-  $$\\text{DCG}@K = \\sum_{i=1}^K \\frac{2^{\\text{rel}_i} - 1}{\\log_2(i + 1)}, \\quad \\text{NDCG}@K = \\frac{\\text{DCG}@K}{\\text{IDCG}@K}$$
-""")
+
+    # --- 5. Comparative Evaluation Metrics -----------------------------------------------
+    st.markdown(
+        '<div class="kg-th-head"><span class="kg-th-num">5</span>'
+        '<span class="kg-th-title">Comparative Evaluation Metrics</span></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<p class="kg-th-body">Four standard Information Retrieval metrics are used to compare the two ranking '
+        'methods objectively, rather than by eye:</p>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown('<div class="kg-metric-card" style="animation-delay:0.05s">'
+                '<div class="kg-metric-name">Precision@K</div></div>', unsafe_allow_html=True)
+    st.latex(r"\text{Precision@K} = \frac{|\text{Relevant} \cap \text{Top K}|}{K}")
+    st.caption("Of the top K results returned, what fraction are actually relevant?")
+
+    st.markdown('<div class="kg-metric-card" style="animation-delay:0.15s">'
+                '<div class="kg-metric-name">Recall@K</div></div>', unsafe_allow_html=True)
+    st.latex(r"\text{Recall@K} = \frac{|\text{Relevant} \cap \text{Top K}|}{|\text{Total Relevant}|}")
+    st.caption("Of all relevant documents that exist, what fraction did the top K actually surface?")
+
+    st.markdown('<div class="kg-metric-card" style="animation-delay:0.25s">'
+                '<div class="kg-metric-name">Mean Average Precision (MAP)</div></div>', unsafe_allow_html=True)
+    st.latex(r"\text{MAP} = \frac{1}{|Q|} \sum_{q=1}^{|Q|} \frac{1}{|R_q|} \sum_{k=1}^{N} P_q(k) \times \text{rel}_q(k)")
+    st.caption("Averages precision at every relevant hit, across every test query, rewarding rankings that place relevant items early.")
+
+    with st.container(border=True):
+        st.markdown('<p class="kg-formula-label">KEY FORMULA &middot; NORMALIZED DISCOUNTED CUMULATIVE GAIN</p>', unsafe_allow_html=True)
+        col_dcg, col_ndcg = st.columns(2)
+        with col_dcg:
+            st.latex(r"\boldsymbol{\text{DCG@K} = \sum_{i=1}^K \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}}")
+        with col_ndcg:
+            st.latex(r"\boldsymbol{\text{NDCG@K} = \frac{\text{DCG@K}}{\text{IDCG@K}}}")
+        st.caption("IDCG@K is the DCG@K of the ideal, perfectly-sorted ranking; NDCG@K = 1.0 means the ranking is perfect.")
     render_ndcg_discount_diagram()
 
-
-def render_casestudy_section():
-    """Renders Section 4: Real-World Case Study."""
-    st.markdown("### Case Study: Semantic Academic & Enterprise Search")
-    st.markdown("""
-#### Scenario Background
-An academic intelligence institution indexes hundreds of thousands of research briefs, corporate acquisition notices, and technical publications. 
-A research director inputs the multi-facet query:
-> **Query**: `"Geoffrey Hinton Deep Learning Google Toronto"`
-
-#### Step 1: Raw Lexical Retrieval (Pure BM25)
-- Document A mentions *"Geoffrey Hinton pioneered neural networks in Toronto."* (Contains 3 query tokens).
-- Document B is a promotional article repeatedly repeating *"Google Google Google search cloud"* (High TF on "Google", low semantic relevance).
-- **Result**: Due to term frequency saturation disparities and lack of entity typing, Document B may outrank or tie with Document A.
-
-#### Step 2: Entity Identification & Knowledge Graph Grounding
-- **Entities Identified**:
-  - `Geoffrey Hinton` $\\rightarrow$ `PERSON`
-  - `Deep Learning` $\\rightarrow$ `CONCEPT`
-  - `Google` / `Google Brain` $\\rightarrow$ `ORGANIZATION`
-  - `Toronto` $\\rightarrow$ `LOCATION`
-- **Knowledge Triples Formed**:
-  - `(Geoffrey Hinton, affiliated_with, University of Toronto)`
-  - `(Geoffrey Hinton, joined, Google Brain)`
-  - `(University of Toronto, located_in, Toronto)`
-
-#### Step 3: Comparative Evaluation Outcome
-Under **Entity-Aware Probabilistic Ranking**, documents confirming direct relational triples with query entities receive calibrated entity salience boosts. Spurious keyword matches are suppressed, raising **Precision@3 from 33.3% to 100%** and elevating **NDCG@3 from 0.46 to 1.00**.
-""")
-
-
-def render_pretest_section():
-    """Renders Section 5: Pretest Assessment."""
-    st.markdown("### Diagnostic Pretest")
-    st.write("Complete the diagnostic assessment below before running the interactive simulation.")
-
-    with st.form("pretest_form"):
-        responses = {}
-        for q in PRETEST_QUESTIONS:
-            st.markdown(f"**Question {q['id']}:** {q['question']}")
-            selected = st.radio(
-                label=f"Options for Pretest Q{q['id']}",
-                options=q["options"],
-                index=st.session_state["pretest_answers"].get(q["id"], 0),
-                key=f"pretest_radio_{q['id']}",
-                label_visibility="collapsed"
-            )
-            responses[q["id"]] = q["options"].index(selected)
-            st.markdown("---")
-
-        submitted = st.form_submit_button("Submit Pretest for Grading", type="primary")
-
-    if submitted:
-        score = 0
-        st.session_state["pretest_answers"] = responses
-        st.session_state["pretest_submitted"] = True
-
-        st.subheader("Pretest Evaluation & Diagnostic Explanations")
-        for q in PRETEST_QUESTIONS:
-            user_ans = responses.get(q["id"])
-            corr_ans = q["answer_index"]
-            if user_ans == corr_ans:
-                score += 1
-                st.success(f"**Question {q['id']}: Correct!**\n\n_{q['explanation']}_")
-            else:
-                st.error(
-                    f"**Question {q['id']}: Incorrect.** (Your answer: {q['options'][user_ans]})\n\n"
-                    f"**Correct Answer:** {q['options'][corr_ans]}\n\n"
-                    f"_{q['explanation']}_"
-                )
-
-        st.session_state["pretest_score"] = score
-        perc = (score / len(PRETEST_QUESTIONS)) * 100
-        st.info(f"Pretest Result: **{score} / {len(PRETEST_QUESTIONS)}** ({perc:.0f}%)")
-
-    elif st.session_state.get("pretest_submitted", False):
-        st.success(f"Pretest completed. Score: **{st.session_state.get('pretest_score', 0)} / {len(PRETEST_QUESTIONS)}**")
+    inject_scroll_reveal()
 
 
 def render_simulation_section():
-    """Renders Section 6: Interactive Simulation Sandbox with Fewer Graph Nodes."""
+    """Renders Section 3: Interactive Simulation Sandbox with Fewer Graph Nodes."""
     st.markdown("### Interactive Simulation Sandbox")
     st.info(
         "Experiment with entity identification, inspect the interactive Knowledge Graph "
         "(designed with fewer nodes for visual clarity), and compare Standard BM25 vs. Entity-Aware Probabilistic Ranking."
     )
+
+    with st.expander("📋 Step-by-Step Procedure"):
+        st.markdown("""
+1. **Step 1 (Theoretical Review)**: Review the *Purpose* and *Theory* sections to understand entity categorization (`PER`, `ORG`, `LOC`, `CONCEPT`), Knowledge Graph relational triples, and the BM25 formulation.
+2. **Step 2 (Select Corpus & Query)**: Choose a domain corpus below (e.g., *AI Pioneers* or *Enterprise Cloud*) and select a target test query.
+3. **Step 3 (Inspect Knowledge Graph Topology)**: Observe the extracted entity nodes and directed relations in the interactive graph. Note how fewer nodes (<15) provide a clean, readable layout without visual confusion.
+4. **Step 4 (Calibrate Hyperparameters)**:
+   - Vary $k_1$ between $0.5$ and $3.0$ to examine term frequency saturation.
+   - Adjust $b$ between $0.0$ and $1.0$ to test length normalization.
+   - Adjust $\\alpha$ between $0.0$ and $2.5$ to examine the impact of entity weighting.
+5. **Step 5 (Analyze Comparative Performance)**: Examine the side-by-side rankings and the performance metric comparison (Precision@K, Recall@K, MAP, NDCG@K).
+6. **Step 6 (Record Experimental Trials)**: Click **'Record Current Trial'** for at least 3 to 4 distinct parameter configurations (e.g., varying $\\alpha$ from $0.0$ to $2.0$).
+7. **Step 7 (Quiz & Report Generation)**: Complete the 10-question *Quiz* (use **'Get New Question Set'** for a fresh set of questions if you'd like another attempt). Finally, navigate to *Report Generation* and *Certificate*, enter your student details, and download your official PDF documents.
+""")
+
+    with st.expander("🧩 Practice Exercises & Inquiry Problems"):
+        st.markdown("""
+Engage with the following inquiry exercises to deepen your analysis:
+
+#### Exercise 1: Term Frequency Saturation Analysis
+- Set $\\alpha = 0.0$ (pure BM25 mode).
+- Set $b = 0.75$.
+- Compare retrieval rankings when $k_1 = 0.5$ (fast saturation) versus $k_1 = 3.0$ (linear term frequency influence).
+- **Inquiry**: *How does a lower $k_1$ prevent documents with keyword-stuffing from dominating the top ranks?*
+
+#### Exercise 2: Document Length Normalization Dynamics
+- Compare setting $b = 0.0$ (no length penalty) versus $b = 1.0$ (full length normalization).
+- **Inquiry**: *Under what corpus conditions does setting $b = 0$ severely disadvantage concise, informative documents?*
+
+#### Exercise 3: Entity Weighting Sensitivity ($\\alpha$)
+- Execute a query matching a specific person and organization (e.g., `"Kavi Rajan Cortex Labs London"`).
+- Record Precision@3 and NDCG@3 as $\\alpha$ increases in steps of $0.5$ from $0.0$ to $2.5$.
+- **Inquiry**: *At what threshold of $\\alpha$ does entity matching completely dominate lexical keyword matching?*
+
+#### Exercise 4: Polysemy and Disambiguation in Sparse Graphs
+- Explain why maintaining a focused graph with fewer, highly disambiguated nodes (8-15) prevents semantic drift during graph-expanded probabilistic retrieval.
+""")
 
     # 1. Parameter Configuration Sidebar / Columns
     st.subheader("1. Experimental Configuration Controls")
@@ -1298,22 +2014,22 @@ def render_simulation_section():
     with c_query:
         preset_queries = {
             "AI & Deep Learning Pioneers (Domain 1)": [
-                "Geoffrey Hinton deep learning Toronto Google",
-                "Demis Hassabis reinforcement learning DeepMind London",
-                "Yann LeCun convolutional networks New York Meta AI",
-                "Sam Altman OpenAI generative transformers Microsoft"
+                "Elena Voss deep learning Toronto Nimbus AI Labs",
+                "Kavi Rajan reinforcement learning Cortex Labs London",
+                "Marcus Lindqvist convolutional networks New York Horizon AI",
+                "Ethan Cole Arclight AI generative transformers Meridian Systems"
             ],
             "Enterprise Cloud & Systems (Domain 2)": [
-                "Satya Nadella Microsoft Azure Redmond distributed computing",
-                "Andy Jassy Amazon Seattle cloud virtualization",
-                "Sundar Pichai Google Cloud distributed computing Mountain View",
-                "Linus Torvalds Linux Kernel cloud virtualization San Francisco"
+                "Priya Anand Meridian Systems Meridian Cloud Redmond distributed computing",
+                "Derek Simmons Vantage Cloud Services Seattle cloud virtualization",
+                "Arjun Mehta Nimbus Cloud distributed computing Mountain View",
+                "Viktor Petrov Solstice Kernel cloud virtualization San Francisco"
             ]
         }
         if corpus_choice == "Add custom text":
             query_options = ["Custom Query"]
         else:
-            query_options = preset_queries.get(corpus_choice, ["Geoffrey Hinton deep learning Google"]) + ["Custom Query"]
+            query_options = preset_queries.get(corpus_choice, ["Elena Voss deep learning Nimbus AI Labs"]) + ["Custom Query"]
 
         query_choice = st.selectbox("Select Test Query:", query_options)
 
@@ -1335,13 +2051,42 @@ def render_simulation_section():
     # Hyperparameters
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        param_k1 = st.slider("BM25 k1 (Term Saturation):", min_value=0.5, max_value=3.0, value=1.5, step=0.1)
+        param_k1 = st.slider(
+            "BM25 k1 (Term Saturation):", min_value=0.5, max_value=3.0, value=1.5, step=0.1,
+            help=(
+                "Controls how much repeating a query word in a document keeps boosting its score. "
+                "Low k1 = repetition barely matters after the first occurrence. High k1 = repeated "
+                "terms keep adding to the score for longer before flattening out. Typical range: 1.2-2.0."
+            )
+        )
     with c2:
-        param_b = st.slider("BM25 b (Length Normalization):", min_value=0.0, max_value=1.0, value=0.75, step=0.05)
+        param_b = st.slider(
+            "BM25 b (Length Normalization):", min_value=0.0, max_value=1.0, value=0.75, step=0.05,
+            help=(
+                "Controls how much long documents are penalized just for being long. "
+                "b = 0 disables length normalization entirely (short and long documents treated equally). "
+                "b = 1 applies full normalization relative to average document length. Typical value: 0.75."
+            )
+        )
     with c3:
-        param_alpha = st.slider("Entity Boost Factor (α):", min_value=0.0, max_value=3.0, value=1.2, step=0.1)
+        param_alpha = st.slider(
+            "Entity Boost Factor (α):", min_value=0.0, max_value=3.0, value=1.2, step=0.1,
+            help=(
+                "How much extra score a document gets when it actually contains a Knowledge Graph entity "
+                "or relation matching the query (not just the word, but the verified entity). "
+                "α = 0 disables the entity boost, making this equivalent to plain BM25. Higher α lets "
+                "entity/relation matches increasingly dominate the ranking."
+            )
+        )
     with c4:
-        param_top_k = st.slider("Evaluation Cutoff (Top K):", min_value=1, max_value=4, value=3, step=1)
+        param_top_k = st.slider(
+            "Evaluation Cutoff (Top K):", min_value=1, max_value=4, value=3, step=1,
+            help=(
+                "How many top-ranked results to check when computing the evaluation metrics below "
+                "(Precision@K, Recall@K, NDCG@K). E.g. K=3 asks: 'of the top 3 results, how many were "
+                "actually relevant?'"
+            )
+        )
 
     # 2. Build Knowledge Graph & Run Comparative Retrieval
     G, entity_meta = build_knowledge_graph(selected_corpus)
@@ -1358,7 +2103,7 @@ def render_simulation_section():
 
     # 3. Knowledge Graph Visualization (Fewer Nodes)
     st.subheader("2. Identified Graph Entities & Knowledge Graph Topology")
-    st.caption("Extracted domain entities categorized into Persons, Organizations, Locations, and Concepts. Graph rendered with focused nodes (<15) without Neo4j dependency.")
+    st.caption("Extracted domain entities categorized into Persons, Organizations, Locations, and Concepts. Graph rendered with focused nodes (<15) without any external graph database dependency.")
 
     col_graph, col_entities = st.columns([2.2, 1.3])
 
@@ -1446,11 +2191,11 @@ def render_simulation_section():
         ])
         fig_bar.update_layout(
             barmode='group',
-            title=f"Comparative Retrieval Performance Benchmark (@K={param_top_k})",
+            title=dict(text=f"Comparative Retrieval Performance Benchmark (@K={param_top_k})", x=0, xanchor="left"),
             yaxis=dict(title="Score (0.0 to 1.0)", range=[0, 1.1]),
-            height=340,
-            margin=dict(l=20, r=20, t=40, b=20),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            height=360,
+            margin=dict(l=20, r=20, t=80, b=20),
+            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5)
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -1508,72 +2253,39 @@ def render_simulation_section():
             st.info("No trials recorded yet. Click 'Record Current Trial' to begin collecting experimental data.")
 
 
-def render_procedure_section():
-    """Renders Section 7: Step-by-Step Procedure."""
-    st.markdown("### Step-by-Step Procedure")
-    st.markdown("""
-To systematically execute Experiment 6, follow the instructions below:
-
-1. **Step 1 (Theoretical Review)**: Review the *Aim*, *Introduction*, and *Theory* sections to understand entity categorization (`PER`, `ORG`, `LOC`, `CONCEPT`), Knowledge Graph relational triples, and the BM25 formulation.
-2. **Step 2 (Pretest Assessment)**: Navigate to the *Pretest* section in the sidebar. Answer the 5 diagnostic questions to verify foundational concepts.
-3. **Step 3 (Select Corpus & Query)**: Open the *Simulation* section. Choose a domain corpus (e.g., *AI Pioneers* or *Enterprise Cloud*) and select a target test query.
-4. **Step 4 (Inspect Knowledge Graph Topology)**: Observe the extracted entity nodes and directed relations in the interactive graph. Note how fewer nodes (<15) provide a clean, readable layout without visual confusion.
-5. **Step 5 (Calibrate Hyperparameters)**:
-   - Vary $k_1$ between $0.5$ and $3.0$ to examine term frequency saturation.
-   - Adjust $b$ between $0.0$ and $1.0$ to test length normalization.
-   - Adjust $\\alpha$ between $0.0$ and $2.5$ to examine the impact of entity weighting.
-6. **Step 6 (Analyze Comparative Performance)**: Examine the side-by-side rankings and the performance metric comparison (Precision@K, Recall@K, MAP, NDCG@K).
-7. **Step 7 (Record Experimental Trials)**: Click **'Record Current Trial'** for at least 3 to 4 distinct parameter configurations (e.g., varying $\\alpha$ from $0.0$ to $2.0$).
-8. **Step 8 (Posttest & Report Generation)**: Complete the 10-question *Posttest* quiz. Finally, navigate to *Report Generation*, enter your student details and observations, and download your official PDF report.
-""")
-
-
-def render_exercises_section():
-    """Renders Section 8: Conceptual and Analytical Exercises."""
-    st.markdown("### Practical Exercises & Inquiry Problems")
-    st.markdown("""
-Engage with the following inquiry exercises to deepen your analysis:
-
-#### Exercise 1: Term Frequency Saturation Analysis
-- Set $\\alpha = 0.0$ (pure BM25 mode).
-- Set $b = 0.75$.
-- Compare retrieval rankings when $k_1 = 0.5$ (fast saturation) versus $k_1 = 3.0$ (linear term frequency influence).
-- **Inquiry**: *How does a lower $k_1$ prevent documents with keyword-stuffing from dominating the top ranks?*
-
-#### Exercise 2: Document Length Normalization Dynamics
-- Compare setting $b = 0.0$ (no length penalty) versus $b = 1.0$ (full length normalization).
-- **Inquiry**: *Under what corpus conditions does setting $b = 0$ severely disadvantage concise, informative documents?*
-
-#### Exercise 3: Entity Weighting Sensitivity ($\alpha$)
-- Execute a query matching a specific person and organization (e.g., `"Demis Hassabis DeepMind London"`).
-- Record Precision@3 and NDCG@3 as $\\alpha$ increases in steps of $0.5$ from $0.0$ to $2.5$.
-- **Inquiry**: *At what threshold of $\\alpha$ does entity matching completely dominate lexical keyword matching?*
-
-#### Exercise 4: Polysemy and Disambiguation in Sparse Graphs
-- Explain why maintaining a focused graph with fewer, highly disambiguated nodes (8-15) prevents semantic drift during graph-expanded probabilistic retrieval.
-""")
-
-
-def render_posttest_section():
-    """Renders Section 9: Posttest Assessment (10 Questions)."""
-    st.markdown("### Concept Assessment Posttest")
+def render_quiz_section():
+    """Renders Section 4: Quiz Assessment (10 questions randomly sampled from the question bank)."""
+    st.markdown("### Concept Assessment Quiz")
     st.write("Answer the 10 conceptual questions below to evaluate your understanding of Graph Entities and Probabilistic Retrieval.")
 
-    with st.form("posttest_form"):
+    if st.button("🔄 Get New Question Set"):
+        bank_ids = [q["id"] for q in QUIZ_QUESTION_BANK]
+        st.session_state["quiz_question_ids"] = random.sample(bank_ids, min(10, len(bank_ids)))
+        st.session_state["quiz_answers"] = {}
+        st.session_state["quiz_submitted"] = False
+        st.session_state["quiz_score"] = 0
+        st.session_state["quiz_set_version"] += 1
+
+    version = st.session_state["quiz_set_version"]
+    active_ids = st.session_state["quiz_question_ids"]
+    questions_by_id = {q["id"]: q for q in QUIZ_QUESTION_BANK}
+    active_questions = [questions_by_id[qid] for qid in active_ids]
+
+    with st.form("quiz_form"):
         user_responses = {}
-        for q in POSTTEST_QUESTIONS:
-            st.markdown(f"**Question {q['id']}:** {q['question']}")
+        for display_idx, q in enumerate(active_questions, start=1):
+            st.markdown(f"**Question {display_idx}:** {q['question']}")
             selected = st.radio(
-                label=f"Options for Posttest Q{q['id']}",
+                label=f"Options for Quiz Q{display_idx}",
                 options=q["options"],
                 index=st.session_state["quiz_answers"].get(q["id"], 0),
-                key=f"posttest_radio_{q['id']}",
+                key=f"quiz_radio_{version}_{q['id']}",
                 label_visibility="collapsed"
             )
             user_responses[q["id"]] = q["options"].index(selected)
             st.markdown("---")
 
-        submitted = st.form_submit_button("Submit Posttest for Grading", type="primary")
+        submitted = st.form_submit_button("Submit Quiz for Grading", type="primary")
 
     if submitted:
         score = 0
@@ -1582,29 +2294,29 @@ def render_posttest_section():
 
         st.divider()
         st.subheader("Evaluation Results and Detailed Feedback")
-        for q in POSTTEST_QUESTIONS:
+        for display_idx, q in enumerate(active_questions, start=1):
             user_ans = user_responses.get(q["id"])
             corr_ans = q["answer_index"]
             if user_ans == corr_ans:
                 score += 1
-                st.success(f"**Question {q['id']}: Correct!**\n\n_{q['explanation']}_")
+                st.success(f"**Question {display_idx}: Correct!**\n\n_{q['explanation']}_")
             else:
                 st.error(
-                    f"**Question {q['id']}: Incorrect.** (Your answer: {q['options'][user_ans]})\n\n"
+                    f"**Question {display_idx}: Incorrect.** (Your answer: {q['options'][user_ans]})\n\n"
                     f"**Correct Answer:** {q['options'][corr_ans]}\n\n"
                     f"**Reasoning:** _{q['explanation']}_"
                 )
 
         st.session_state["quiz_score"] = score
-        perc = (score / len(POSTTEST_QUESTIONS)) * 100
-        st.info(f"Final Posttest Score: **{score} / {len(POSTTEST_QUESTIONS)}** ({perc:.0f}%)")
+        perc = (score / len(active_questions)) * 100
+        st.info(f"Final Quiz Score: **{score} / {len(active_questions)}** ({perc:.0f}%)")
 
     elif st.session_state.get("quiz_submitted", False):
-        st.success(f"Posttest already completed. Current score: **{st.session_state.get('quiz_score', 0)} / {len(POSTTEST_QUESTIONS)}**")
+        st.success(f"Quiz already completed. Current score: **{st.session_state.get('quiz_score', 0)} / {len(active_questions)}**")
 
 
 def render_references_section():
-    """Renders Section 10: Academic References & Textbooks."""
+    """Renders Section 7: Academic References & Textbooks."""
     st.markdown("### Academic References & Recommended Reading")
     st.markdown("""
 1. **Robertson, S. E., & Zaragoza, H. (2009)**. *The Probabilistic Relevance Framework: BM25 and Beyond*. Foundations and Trends in Information Retrieval, 3(4), 333-389.
@@ -1616,7 +2328,7 @@ def render_references_section():
 
 
 def render_report_section():
-    """Renders Section 11: Dynamic Lab Report Generator with PDF Export."""
+    """Renders Section 5: Dynamic Lab Report Generator with PDF Export."""
     st.markdown("### Official Lab Report Generation")
     st.write("Compile your student details, diagnostic scores, recorded simulation trials, and observations into a downloadable PDF report.")
 
@@ -1652,8 +2364,7 @@ def render_report_section():
     st.write(f"**Discipline:** {EXPERIMENT_CONFIG['discipline']} | **Subject:** {EXPERIMENT_CONFIG['subject']}")
     st.write(f"**Student:** {student_name} | **ID:** {student_id} | **Date:** {lab_date}")
     st.write(
-        f"**Pretest Score:** {st.session_state.get('pretest_score', 0)} / {len(PRETEST_QUESTIONS)} | "
-        f"**Posttest Score:** {st.session_state.get('quiz_score', 0)} / {len(POSTTEST_QUESTIONS)}"
+        f"**Quiz Score:** {st.session_state.get('quiz_score', 0)} / {len(st.session_state.get('quiz_question_ids', []))}"
     )
 
     if not trials_df.empty:
@@ -1667,10 +2378,8 @@ def render_report_section():
         student_id=student_id,
         date_str=str(lab_date),
         trials_df=trials_df,
-        pretest_score=st.session_state.get("pretest_score", 0),
-        pretest_total=len(PRETEST_QUESTIONS),
-        posttest_score=st.session_state.get("quiz_score", 0),
-        posttest_total=len(POSTTEST_QUESTIONS),
+        quiz_score=st.session_state.get("quiz_score", 0),
+        quiz_total=len(st.session_state.get("quiz_question_ids", [])),
         student_notes=student_notes
     )
 
@@ -1704,6 +2413,56 @@ def render_report_section():
         )
 
 
+def render_certificate_section():
+    """Renders Section 6: Certificate of Completion."""
+    st.markdown("### 🎓 Certificate of Completion")
+    st.write("Download a personalized certificate for completing this KGIRS virtual lab experiment.")
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        cert_name = st.text_input(
+            "Student Name", value=st.session_state["student_info"].get("name", "Student Name"), key="cert_name_input"
+        )
+    with col2:
+        cert_id = st.text_input(
+            "Student Roll / ID", value=st.session_state["student_info"].get("id", "EXP-006"), key="cert_id_input"
+        )
+    with col3:
+        cert_date = st.date_input("Completion Date", value=datetime.now(), key="cert_date_input")
+
+    st.session_state["student_info"]["name"] = cert_name
+    st.session_state["student_info"]["id"] = cert_id
+    st.session_state["student_info"]["date"] = str(cert_date)
+
+    quiz_total = len(st.session_state.get("quiz_question_ids", []))
+    quiz_score = st.session_state.get("quiz_score", 0)
+    if st.session_state.get("quiz_submitted", False):
+        st.success(f"Quiz Score on Record: **{quiz_score} / {quiz_total}**")
+    else:
+        st.info(
+            "You haven't submitted the Quiz yet — your certificate will show a score of 0 until you do. "
+            "(The certificate itself is available regardless.)"
+        )
+
+    cert_bytes = generate_certificate_pdf(
+        student_name=cert_name,
+        student_id=cert_id,
+        date_str=str(cert_date),
+        quiz_score=quiz_score,
+        quiz_total=quiz_total
+    )
+
+    st.divider()
+    st.download_button(
+        label="🎓 Download Certificate (.pdf)",
+        data=cert_bytes,
+        file_name="kgirs_exp6_certificate.pdf",
+        mime="application/pdf",
+        type="primary",
+        use_container_width=True
+    )
+
+
 # ======================================================================================
 # 6. MAIN NAVIGATION & SESSION STATE
 # ======================================================================================
@@ -1712,12 +2471,11 @@ def init_session_state():
     """Initializes Streamlit session state variables."""
     if "trials" not in st.session_state:
         st.session_state["trials"] = []
-    if "pretest_answers" not in st.session_state:
-        st.session_state["pretest_answers"] = {}
-    if "pretest_submitted" not in st.session_state:
-        st.session_state["pretest_submitted"] = False
-    if "pretest_score" not in st.session_state:
-        st.session_state["pretest_score"] = 0
+    if "quiz_question_ids" not in st.session_state:
+        bank_ids = [q["id"] for q in QUIZ_QUESTION_BANK]
+        st.session_state["quiz_question_ids"] = random.sample(bank_ids, min(10, len(bank_ids)))
+    if "quiz_set_version" not in st.session_state:
+        st.session_state["quiz_set_version"] = 0
     if "quiz_answers" not in st.session_state:
         st.session_state["quiz_answers"] = {}
     if "quiz_submitted" not in st.session_state:
@@ -1736,69 +2494,50 @@ def init_session_state():
 
 def main():
     st.set_page_config(
-        page_title="IIT KGP Virtual Lab - KGIRS Exp 6",
+        page_title="Virtual Lab Experiment 6",
         page_icon=None,
         layout="wide"
     )
 
     init_session_state()
 
-    # IIT Kharagpur VLab Breadcrumb Banner
-    st.caption(
-        f"**Virtual Labs (IIT Kharagpur)** &gt; {EXPERIMENT_CONFIG['discipline']} &gt; "
-        f"{EXPERIMENT_CONFIG['subject']} &gt; Experiment {EXPERIMENT_CONFIG['exp_number']}"
-    )
-    st.title(f"Experiment {EXPERIMENT_CONFIG['exp_number']}: {EXPERIMENT_CONFIG['title']}")
-
     # Navigation Sidebar matching IIT Kharagpur VLab page navigation
     section = st.sidebar.radio(
         "Lab Navigation",
         options=[
-            "Aim",
-            "Introduction",
+            "Purpose",
             "Theory",
-            "Case Study",
-            "Pretest",
             "Simulation",
-            "Procedure",
-            "Exercises",
-            "Posttest",
-            "References",
-            "Report Generation"
+            "Quiz",
+            "Report Generation",
+            "Certificate",
+            "References"
         ]
     )
 
+    render_page_header(section)
+
     st.sidebar.divider()
     st.sidebar.subheader("Session Progress")
-    pre_status = "Done" if st.session_state.get("pretest_submitted", False) else "Pending"
-    post_status = "Done" if st.session_state.get("quiz_submitted", False) else "Pending"
-    st.sidebar.write(f"- **Pretest:** {pre_status} ({st.session_state.get('pretest_score', 0)}/5)")
-    st.sidebar.write(f"- **Posttest:** {post_status} ({st.session_state.get('quiz_score', 0)}/10)")
+    quiz_status = "Done" if st.session_state.get("quiz_submitted", False) else "Pending"
+    st.sidebar.write(f"- **Quiz:** {quiz_status} ({st.session_state.get('quiz_score', 0)}/{len(st.session_state.get('quiz_question_ids', []))})")
     st.sidebar.write(f"- **Trials Logged:** {len(st.session_state.get('trials', []))}")
 
     # Section Dispatcher
-    if section == "Aim":
-        render_aim_section()
-    elif section == "Introduction":
-        render_introduction_section()
+    if section == "Purpose":
+        render_purpose_section()
     elif section == "Theory":
         render_theory_section()
-    elif section == "Case Study":
-        render_casestudy_section()
-    elif section == "Pretest":
-        render_pretest_section()
     elif section == "Simulation":
         render_simulation_section()
-    elif section == "Procedure":
-        render_procedure_section()
-    elif section == "Exercises":
-        render_exercises_section()
-    elif section == "Posttest":
-        render_posttest_section()
-    elif section == "References":
-        render_references_section()
+    elif section == "Quiz":
+        render_quiz_section()
     elif section == "Report Generation":
         render_report_section()
+    elif section == "Certificate":
+        render_certificate_section()
+    elif section == "References":
+        render_references_section()
 
 
 if __name__ == "__main__":
