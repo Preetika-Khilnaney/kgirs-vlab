@@ -1814,7 +1814,7 @@ extraction and Knowledge Graphs, to the probabilistic ranking formulas the Simul
         unsafe_allow_html=True
     )
     with st.container(border=True):
-        st.markdown('<p class="kg-formula-label">KEY FORMULA</p>', unsafe_allow_html=True)
+        st.markdown('<p class="kg-formula-label">FORMULA</p>', unsafe_allow_html=True)
         st.latex(r"\boldsymbol{\text{Odds}(R{=}1 \mid D, Q) = \dfrac{P(R{=}1 \mid D, Q)}{P(R{=}0 \mid D, Q)}}")
     render_prp_ranking_diagram()
 
@@ -1832,7 +1832,7 @@ extraction and Knowledge Graphs, to the probabilistic ranking formulas the Simul
         unsafe_allow_html=True
     )
     with st.container(border=True):
-        st.markdown('<p class="kg-formula-label">KEY FORMULA</p>', unsafe_allow_html=True)
+        st.markdown('<p class="kg-formula-label">FORMULA</p>', unsafe_allow_html=True)
         st.latex(r"""\begin{gathered}
 \boldsymbol{\text{BM25}(D, Q) = \sum_{q \in Q} \text{IDF}(q) \cdot {}} \\[6pt]
 \boldsymbol{\frac{f(q, D) \cdot (k_1 + 1)}{f(q, D) + k_1 \left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}}
@@ -1874,7 +1874,7 @@ extraction and Knowledge Graphs, to the probabilistic ranking formulas the Simul
         unsafe_allow_html=True
     )
     with st.container(border=True):
-        st.markdown('<p class="kg-formula-label">KEY FORMULA</p>', unsafe_allow_html=True)
+        st.markdown('<p class="kg-formula-label">FORMULA</p>', unsafe_allow_html=True)
         st.latex(r"""\begin{gathered}
 \boldsymbol{\text{Score}(D, Q) = \text{BM25}(D, Q)} \\[6pt]
 \boldsymbol{{}+ \alpha \cdot \text{EntityBoost} + \beta \cdot \text{RelationBoost}}
@@ -1923,7 +1923,7 @@ extraction and Knowledge Graphs, to the probabilistic ranking formulas the Simul
     st.caption("Averages precision at every relevant hit, across every test query, rewarding rankings that place relevant items early.")
 
     with st.container(border=True):
-        st.markdown('<p class="kg-formula-label">KEY FORMULA &middot; NORMALIZED DISCOUNTED CUMULATIVE GAIN</p>', unsafe_allow_html=True)
+        st.markdown('<p class="kg-formula-label">FORMULA &middot; NORMALIZED DISCOUNTED CUMULATIVE GAIN</p>', unsafe_allow_html=True)
         col_dcg, col_ndcg = st.columns(2)
         with col_dcg:
             st.latex(r"\boldsymbol{\text{DCG@K} = \sum_{i=1}^K \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}}")
